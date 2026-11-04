@@ -32,7 +32,6 @@ jobs:
             awk -v h="### $1" '{ sub(/\r$/, "") } $0 == h { f = 1; next } /^### / { f = 0 } f' <<< "$BODY" | sed '/^[[:space:]]*$/d'
           }
           errors=()
-          grep -q 'I am submitting through the SC2CommunityMaps form v1\.' <<< "$BODY" || errors+=("This issue was not created with the **Publish map** form. Please open a new issue from the form.")
           for marker in 'Map name' 'Author' 'Download URL' 'Map or mappack version' 'Scenario File Paths'; do
             value=$(section "$marker")
             [[ -n "$value" && "$value" != "_No response_" ]] || errors+=("**$marker** is required.")

@@ -30,7 +30,6 @@ jobs:
         run: |
           set -euo pipefail
           valid=true
-          grep -q 'I am submitting through the SC2CommunityMaps form v1\.' <<< "$BODY" || valid=false
           for marker in '### Map name' '### Author' '### Download URL' '### Map or mappack version' '### Description' '### SHA-256 (generated automatically)'; do
             grep -q "$marker" <<< "$BODY" || valid=false
           done

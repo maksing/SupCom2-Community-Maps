@@ -13,14 +13,7 @@ body:
         - Do not edit the generated SHA-256 field; an automatic check fills it in after you submit.
         - If the automatic check finds a problem, it leaves a comment on your issue explaining what to fix. Edit the issue and it is checked again.
 
-        Full publishing rules are in the [README](https://github.com/maksing/SupCom2-Community-Maps#readme).
-  - type: checkboxes
-    id: form_version
-    attributes:
-      label: Form version
-      options:
-        - label: I am submitting through the SC2CommunityMaps form v1.
-          required: true
+        Read the [community map rules](https://github.com/maksing/SupCom2-Community-Maps/blob/main/RULES.md) before submitting. Publishing instructions are in the [README](https://github.com/maksing/SupCom2-Community-Maps#readme).
   - type: input
     id: map_name
     attributes:
@@ -141,4 +134,6 @@ body:
       label: Publication agreement
       options:
         - label: I have the right to publish this map and understand that pending maps are unverified.
+          required: true
+        - label: I agree that this map complies with the [community map rules](https://github.com/maksing/SupCom2-Community-Maps/blob/main/RULES.md) and does not violate them.
           required: true
