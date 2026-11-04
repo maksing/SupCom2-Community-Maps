@@ -74,14 +74,11 @@ body:
     attributes:
       label: Size
       description: Optional map size, for example Small, Medium, or Large.
-  - type: upload
+  - type: textarea
     id: map_image
     attributes:
       label: Map image
-      description: Optional map preview image. Drag and drop a PNG, JPG, GIF, WEBP, or SVG here.
-    validations:
-      required: false
-      accept: ".png,.jpg,.jpeg,.gif,.webp,.svg"
+      description: Optional map preview image. Drag an image here or paste it into this field while filling out the form.
   - type: input
     id: tags
     attributes:
