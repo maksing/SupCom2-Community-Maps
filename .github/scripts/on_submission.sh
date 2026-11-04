@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs when a submission is opened, reopened or edited.
 # Needs BODY, NUMBER, GH_TOKEN and GH_REPO in the environment.
+# MODE=recheck is used by recheck_all.sh: a valid verified map stays verified instead of going back to pending.
 set -uo pipefail
 here="$(dirname "${BASH_SOURCE[0]}")"
 source "$here/common.sh"
@@ -52,11 +53,18 @@ if [[ -n "$errors" ]]; then
   exit 0
 fi
 
+echo "RESULT=valid"
+if [[ "${MODE:-normal}" == recheck && "$was_verified" == true ]]; then
+  exit 0
+fi
+
 # Everything passed: back to the moderation queue, with the SHA-256 of the current file.
 set_status pending
-gh issue view "$NUMBER" --repo "$GH_REPO" --json body --jq .body > "$body_file"
-HASH="$hash" perl -0pi -e 's/(### SHA-256 \(generated automatically\)\s*)(?:_No response_|[^\s]+)?/$1.$ENV{HASH}/e' "$body_file"
-gh issue edit "$NUMBER" --repo "$GH_REPO" --body-file "$body_file"
-if [[ "$was_verified" == true ]]; then
+if [[ "$(python3 "$validate_script" sha | tr 'a-f' 'A-F')" != "$hash" ]]; then
+  gh issue view "$NUMBER" --repo "$GH_REPO" --json body --jq .body > "$body_file"
+  HASH="$hash" perl -0pi -e 's/(### SHA-256 \(generated automatically\)\s*)(?:_No response_|[^\s]+)?/$1.$ENV{HASH}/e' "$body_file"
+  gh issue edit "$NUMBER" --repo "$GH_REPO" --body-file "$body_file"
+fi
+if [[ "$was_verified" == true && "${MODE:-normal}" != recheck ]]; then
   gh issue comment "$NUMBER" --repo "$GH_REPO" --body "This submission changed after verification and requires review again."
 fi

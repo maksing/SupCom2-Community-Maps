@@ -49,14 +49,16 @@ bullet_list() {
 
 # mark_invalid "<problems, one per line>": invalid status and a comment that tells the author what to fix.
 mark_invalid() {
+  echo "RESULT=invalid"
   set_status invalid
   gh issue comment "$NUMBER" --repo "$GH_REPO" --body "The automatic check found problems with this submission:"$'\n\n'"$(bullet_list "$1")"$'\n'"Edit the issue to fix them and it will be checked again."
 }
 
-# open_issues_mentioning "<text>": prints the numbers of the other open issues whose body contains the text, as "#1, #2".
+# open_issues_mentioning "<text>": prints the numbers of the older open issues whose body contains the text, as "#1, #2".
+# Only older issues count, so of two duplicates the first one keeps its status.
 open_issues_mentioning() {
   gh issue list --repo "$GH_REPO" --state open --search "\"$1\" in:body" --json number \
-    --jq "[.[].number | select(. != $NUMBER)] | map(\"#\(.)\") | join(\", \")"
+    --jq "[.[].number | select(. < $NUMBER)] | map(\"#\(.)\") | join(\", \")"
 }
 
 # without_blank_lines "<text>"

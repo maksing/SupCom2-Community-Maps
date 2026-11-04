@@ -34,7 +34,7 @@ start() {
   printf '%s\n' "$1" > "$FAKE_DIR/body.txt"; shift
   : > "$FAKE_DIR/labels.txt"; : > "$FAKE_DIR/comments.txt"
   for label in "$@"; do echo "$label" >> "$FAKE_DIR/labels.txt"; done
-  unset FAKE_ARCHIVE FAKE_CONTENT_TYPE FAKE_DUPLICATES FAKE_VERIFIED
+  unset FAKE_ARCHIVE FAKE_CONTENT_TYPE FAKE_DUPLICATES FAKE_VERIFIED FAKE_OPEN
 }
 run() { BODY=$(cat "$FAKE_DIR/body.txt") bash "$here/$1" >/dev/null; }
 labels() { sort "$FAKE_DIR/labels.txt" | paste -sd, -; }
@@ -151,6 +151,33 @@ start "$(make_body $valid_name "$good_sha")" verified
 FAKE_VERIFIED=7 FAKE_ARCHIVE=$work/other.scd run check_verified.sh
 expect_labels "verified map whose file changed goes back to pending" pending
 expect_comment "changed file is explained" "changed after this map was verified"
+
+# --- recheck of all submissions ---
+start "$(make_body $valid_name "$good_sha")" verified promoted
+FAKE_OPEN=7 FAKE_ARCHIVE=$work/good.scd APPLY=true bash "$here/recheck_all.sh" >/dev/null
+expect_labels "recheck keeps a valid verified map verified" promoted,verified
+expect_no_comment "recheck of a valid verified map gets no comment"
+
+start "$(make_body $invalid_name "$good_sha")" verified
+FAKE_OPEN=7 APPLY=true bash "$here/recheck_all.sh" >/dev/null
+expect_labels "recheck takes verified from a map that no longer passes" invalid
+expect_comment "recheck explains the problem" "naming convention"
+
+start "$(make_body $invalid_name "$good_sha")" verified
+FAKE_OPEN=7 bash "$here/recheck_all.sh" > "$work/dry.txt"
+expect_labels "dry run changes no labels" verified
+expect_no_comment "dry run posts no comments"
+grep -q "dry run\] would run" "$work/dry.txt" && pass "dry run reports what it would do" || fail "dry run does not report what it would do"
+grep -q "#7: INVALID" "$work/dry.txt" && pass "dry run reports the result" || fail "dry run does not report the result"
+
+start "$(make_body $valid_name '_No response_')" invalid
+FAKE_OPEN=7 FAKE_ARCHIVE=$work/good.scd APPLY=true bash "$here/recheck_all.sh" >/dev/null
+expect_labels "recheck moves a now-valid invalid map to pending" pending
+
+start "just a question, not a submission" pending
+FAKE_OPEN=7 APPLY=true bash "$here/recheck_all.sh" > "$work/skip.txt"
+expect_labels "recheck leaves issues that are not submissions alone" pending
+grep -q "skipped" "$work/skip.txt" && pass "recheck reports skipped issues" || fail "recheck does not report skipped issues"
 
 echo
 if (( failures == 0 )); then echo "all passed"; else echo "$failures failed"; exit 1; fi

@@ -18,6 +18,8 @@ case "$cmd" in
       if [[ "$1" == --body ]]; then printf '%s\n---\n' "$2" >> "$FAKE_DIR/comments.txt"; shift 2; else shift; fi
     done ;;
   "issue list")
-    if [[ "$*" == *--label* ]]; then echo "${FAKE_VERIFIED:-}"; else echo "${FAKE_DUPLICATES:-}"; fi ;;
+    if [[ "$*" == *--search* ]]; then echo "${FAKE_DUPLICATES:-}"
+    elif [[ "$*" == *--label* ]]; then echo "${FAKE_VERIFIED:-}"
+    else echo "${FAKE_OPEN:-}"; fi ;;
   *) ;;
 esac

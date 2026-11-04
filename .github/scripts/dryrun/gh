@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# gh for dry runs: reads go through to the real gh, anything that would change an issue is only printed.
+self_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ "$1 $2" == "issue edit" || "$1 $2" == "issue comment" ]]; then
+  echo "[dry run] would run: gh $*"
+  exit 0
+fi
+PATH=$(tr ':' '\n' <<< "$PATH" | grep -vxF "$self_dir" | paste -sd: -)
+exec gh "$@"

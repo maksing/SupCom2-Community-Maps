@@ -26,3 +26,7 @@ Every submission is checked when it is opened or edited. If a check fails, the i
 An issue always has exactly one status label: `pending`, `verified`, `invalid` or `broken` (`rejected` is a moderator decision that the automation never changes, and `promoted` and `hidden` are kept as they are). Adding `verified` to an `invalid` or incomplete submission is undone with a comment, and editing a verified map returns it to `pending`.
 
 Verified maps are downloaded again every week. A map whose download stops working is labeled `broken`, and a map whose file changed after it was verified goes back to `pending`; in both cases the `verified` label is removed.
+
+## Rechecking all submissions
+
+After the rules or checks change, run **Actions → Recheck all submissions → Run workflow**. It runs every check again on every open map submission and lists the result per issue in the run summary. By default it is a dry run that changes nothing; tick **apply** to update labels and post comments. Verified maps that still pass stay verified, verified maps that now fail lose the label and become `invalid`, and `rejected` submissions are skipped.

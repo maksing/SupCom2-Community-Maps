@@ -1,0 +1,35 @@
+name: Recheck all submissions
+
+# Runs every automatic check again on every open map submission, for example after the rules changed.
+# By default it only reports; tick "apply" to also update labels and post comments.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply the results (update labels and post comments). Unticked: dry run, report only."
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  recheck:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      APPLY: ${{ inputs.apply }}
+    steps:
+      - name: Check out the validation scripts
+        uses: actions/checkout@v4
+
+      - name: Ensure labels exist
+        if: inputs.apply
+        run: |
+          gh label create pending --repo "$GH_REPO" --color FBCA04 --description "Awaiting moderator review" --force
+          gh label create invalid --repo "$GH_REPO" --color B60205 --description "Submission failed validation" --force
+
+      - name: Recheck submissions
+        run: bash .github/scripts/recheck_all.sh
