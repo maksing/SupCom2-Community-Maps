@@ -1,0 +1,22 @@
+name: Reset verification after edit
+
+on:
+  issues:
+    types: [edited]
+
+permissions:
+  issues: write
+
+jobs:
+  reset:
+    if: contains(github.event.issue.labels.*.name, 'verified') && (github.event.changes.body != null || github.event.changes.title != null)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Return edited map to moderation queue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue edit "$NUMBER" --repo "$GH_REPO" --remove-label verified --add-label pending
+          gh issue comment "$NUMBER" --repo "$GH_REPO" --body "This submission changed after verification and requires review again."

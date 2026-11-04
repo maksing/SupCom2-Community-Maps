@@ -1,0 +1,57 @@
+name: Publish map
+description: Submit a Supreme Commander 2 map for community review
+title: "[MAP] "
+labels:
+  - pending
+body:
+  - type: input
+    id: map_name
+    attributes:
+      label: Map name
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: Author
+    validations:
+      required: true
+  - type: input
+    id: download_url
+    attributes:
+      label: Download URL
+      description: Direct HTTPS URL to an .scd or .zip file.
+    validations:
+      required: true
+  - type: dropdown
+    id: file_type
+    attributes:
+      label: File type
+      options:
+        - .scd
+        - .zip
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Map or game version
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
+  - type: input
+    id: sha256
+    attributes:
+      label: SHA-256 (optional)
+  - type: checkboxes
+    id: agreement
+    attributes:
+      label: Publication agreement
+      options:
+        - label: I have the right to publish this map and understand that pending maps are unverified.
+          required: true

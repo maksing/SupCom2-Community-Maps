@@ -1,0 +1,34 @@
+name: Validate map submission
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  issues: write
+
+jobs:
+  validate:
+    if: contains(github.event.issue.labels.*.name, 'pending') || startsWith(github.event.issue.title, '[MAP]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate issue form fields
+        env:
+          BODY: ${{ github.event.issue.body }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+        shell: bash
+        run: |
+          valid=true
+          for marker in '### Map name' '### Author' '### Download URL' '### File type' '### Map or game version' '### Description'; do
+            grep -q "$marker" <<< "$BODY" || valid=false
+          done
+          url=$(awk '/^### Download URL/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
+          [[ "$url" == https://* ]] || valid=false
+          [[ "$url" == *.scd || "$url" == *.zip ]] || valid=false
+          if [[ "$valid" == true ]]; then
+            gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label pending --remove-label invalid
+          else
+            gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label invalid --remove-label pending
+          fi
