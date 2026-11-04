@@ -43,7 +43,7 @@ body:
     id: version
     attributes:
       label: Map or mappack version
-      description: Use exactly three numbers: 1.17.2, 1.0.0, or 2.0.0.
+      description: "Use exactly three numbers, for example 1.17.2, 1.0.0, or 2.0.0."
     validations:
       required: true
   - type: input
