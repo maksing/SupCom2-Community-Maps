@@ -20,7 +20,7 @@ from urllib.parse import urlparse
 # _Map_8p_Name_v1.0.0_by_author.scd, _MapPack_Name_v1.0.0_by_author.scd, _CustomMission_1p_Name_v1.0.0_by_author.scd
 FILE_NAME = re.compile(
     r"^_(?P<kind>Map|MapPack|CustomMission)_(?:(?P<players>\d)p_)?(?P<name>[A-Za-z0-9-]+)"
-    r"_v(?P<version>\d+\.\d+\.\d+)(?:_by_(?P<by>[A-Za-z0-9]+))?\.(?P<ext>scd|zip)$"
+    r"_v(?P<version>\d+\.\d+\.\d+)(?:_by_(?P<by>[A-Za-z0-9-]+))?\.(?P<ext>scd|zip)$"
 )
 EXPECTED_NAME = "`_Map_8p_MapName_v1.0.0_by_author.scd` (maps and custom missions), `_MapPack_PackName_v1.0.0_by_author.scd` (map packs)"
 VERSION = re.compile(r"^\d+\.\d+\.\d+$")

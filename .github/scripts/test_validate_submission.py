@@ -32,6 +32,7 @@ class FieldTests(unittest.TestCase):
             "_MapPack_Autumn2026-Part-1_v2.0.0_by_BDFTM.scd",
             "_CustomMission_1p_TermesisCustomMission_v5.0.0_by_bdftm.scd",
             "_Map_6p_OpenPalmsInfiniteMass_v1.0.0.scd",
+            "_Map_8p_AZU-Europa-Research-Site_v1.0.0_by_blu-azur.scd",
         ]
         for name in names:
             self.assertIsNotNone(v.FILE_NAME.match(name), name)

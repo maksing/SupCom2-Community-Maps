@@ -16,7 +16,7 @@ Moderators may mark submissions `verified`, `rejected`, `broken`, or `invalid`. 
 
 Every submission is checked when it is opened or edited. If a check fails, the issue is labeled `invalid` and a comment lists everything to fix:
 
-- **File name** (the last part of the download URL) must follow the naming convention: `_Map_8p_MapName_v1.0.0_by_author.scd` for maps, `_CustomMission_1p_MissionName_v1.0.0_by_author.scd` for custom missions, and `_MapPack_PackName_v1.0.0_by_author.scd` for map packs (no player count). The name uses letters, digits and `-` only, `_by_author` is optional, and the player count is `1p` to `8p`.
+- **File name** (the last part of the download URL) must follow the naming convention: `_Map_8p_MapName_v1.0.0_by_author.scd` for maps, `_CustomMission_1p_MissionName_v1.0.0_by_author.scd` for custom missions, and `_MapPack_PackName_v1.0.0_by_author.scd` for map packs (no player count). The name uses letters, digits and `-` only, `_by_author` is optional (the author, like the name, uses letters, digits and `-`), and the player count is `1p` to `8p`.
 - The version in the file name must equal **Map or mappack version**, and **Players** must match the player count in the file name.
 - **Scenario File Paths** must start with `/maps/`, end with `.lua`, and every path must exist inside the downloaded file.
 - The download must be a direct link to a valid archive of at most 512 MB, not a web page, and must not contain executables or scripts.
