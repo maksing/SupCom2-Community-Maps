@@ -11,6 +11,9 @@ body:
         - The download must be a **direct HTTPS link** to an `.scd` or `.zip` file, for example a GitHub Releases asset. Pages on Google Drive, Mega, or similar hosts will not work.
         - Pending maps are unverified. A maintainer reviews each submission before it is marked verified.
         - Do not edit the generated SHA-256 field; an automatic check fills it in after you submit.
+        - If the automatic check finds a problem, it leaves a comment on your issue explaining what to fix. Edit the issue and it is checked again.
+
+        Full publishing rules are in the [README](https://github.com/maksing/SupCom2-Community-Maps#readme).
   - type: checkboxes
     id: form_version
     attributes:
@@ -35,15 +38,7 @@ body:
     attributes:
       label: Download URL
       description: Direct HTTPS URL to an .scd or .zip file.
-    validations:
-      required: true
-  - type: dropdown
-    id: file_type
-    attributes:
-      label: File type
-      options:
-        - .scd
-        - .zip
+      placeholder: https://github.com/user/repo/releases/download/v1.0.0/map.scd
     validations:
       required: true
   - type: input
@@ -51,14 +46,17 @@ body:
     attributes:
       label: Map or mappack version
       description: "Use exactly three numbers, for example 1.17.2, 1.0.0, or 2.0.0."
+      placeholder: 1.0.0
     validations:
       required: true
-  - type: input
+  - type: textarea
     id: scenario_file_paths
     attributes:
       label: Scenario File Paths
-      description: Required. Enter one or more paths inside the archive separated by semicolons. Every path must end with .lua.
-      placeholder: /maps/example/example_scenario.lua;/maps/example/example_preview.lua
+      description: Required. Enter one path inside the archive per line. Every path must end with .lua.
+      placeholder: |
+        /maps/example/example_scenario.lua
+        /maps/example/example_second_scenario.lua
     validations:
       required: true
   - type: textarea

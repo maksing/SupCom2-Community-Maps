@@ -20,6 +20,7 @@ jobs:
           gh label create invalid --repo "$GH_REPO" --color B60205 --description "Submission failed validation" --force
 
       - name: Validate issue form fields
+        id: validate
         env:
           BODY: ${{ github.event.issue.body }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -27,28 +28,43 @@ jobs:
           NUMBER: ${{ github.event.issue.number }}
         shell: bash
         run: |
-          valid=true
-          grep -q 'I am submitting through the SC2CommunityMaps form v1\.' <<< "$BODY" || valid=false
-          for marker in '### Map name' '### Author' '### Download URL' '### File type' '### Map or mappack version' '### Scenario File Paths'; do
-            grep -q "$marker" <<< "$BODY" || valid=false
+          section() {
+            awk -v h="### $1" '{ sub(/\r$/, "") } $0 == h { f = 1; next } /^### / { f = 0 } f' <<< "$BODY" | sed '/^[[:space:]]*$/d'
+          }
+          errors=()
+          grep -q 'I am submitting through the SC2CommunityMaps form v1\.' <<< "$BODY" || errors+=("This issue was not created with the **Publish map** form. Please open a new issue from the form.")
+          for marker in 'Map name' 'Author' 'Download URL' 'Map or mappack version' 'Scenario File Paths'; do
+            value=$(section "$marker")
+            [[ -n "$value" && "$value" != "_No response_" ]] || errors+=("**$marker** is required.")
           done
-          url=$(awk '/^### Download URL/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
-          [[ "$url" == https://* ]] || valid=false
-          [[ "$url" == *.scd || "$url" == *.zip ]] || valid=false
-          version=$(awk '/^### Map or mappack version/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
-          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || valid=false
-          scenario=$(awk '/^### Scenario File Paths/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
-          [[ -n "$scenario" ]] || valid=false
-          scenario=${scenario//;/ }
-          for scenario_path in $scenario; do [[ "$scenario_path" == *.lua ]] || valid=false; done
-          if [[ "$valid" == true ]]; then
+          url=$(section 'Download URL' | head -n 1 | tr -d ' ')
+          if [[ -n "$url" ]]; then
+            [[ "$url" == https://* ]] || errors+=("**Download URL** must be a direct HTTPS link.")
+            [[ "$url" == *.scd || "$url" == *.zip ]] || errors+=("**Download URL** must end with \`.scd\` or \`.zip\`.")
+          fi
+          version=$(section 'Map or mappack version' | head -n 1 | tr -d ' ')
+          if [[ -n "$version" ]]; then
+            [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || errors+=("**Map or mappack version** must be exactly three numbers such as \`1.0.0\`.")
+          fi
+          while IFS= read -r scenario_path; do
+            scenario_path=$(tr -d ' ' <<< "$scenario_path")
+            [[ -z "$scenario_path" || "$scenario_path" == "_No response_" ]] && continue
+            [[ "$scenario_path" == *.lua ]] || errors+=("Every **Scenario File Path** must end with \`.lua\`; fix the path starting with \`${scenario_path:0:80}\`.")
+          done < <(section 'Scenario File Paths' | tr ';' '\n')
+          if (( ${#errors[@]} == 0 )); then
             gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label pending --remove-label invalid
+            echo "valid=true" >> "$GITHUB_OUTPUT"
           else
             gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label invalid --remove-label pending
-            exit 0
+            message="The automatic check found problems with this submission:"$'\n\n'
+            for error in "${errors[@]}"; do message+="- $error"$'\n'; done
+            message+=$'\n'"Edit the issue to fix them and it will be checked again."
+            gh issue comment "$NUMBER" --repo "$GH_REPO" --body "$message"
+            echo "valid=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Compute SHA-256 automatically
+        if: steps.validate.outputs.valid == 'true'
         env:
           BODY: ${{ github.event.issue.body }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -62,11 +78,16 @@ jobs:
           body_file=$(mktemp)
           trap 'rm -f "$temp" "$body_file"' EXIT
 
-          curl --fail --location --max-time 120 --proto '=https' --proto-redir '=https' --output "$temp" "$url"
+          reject() {
+            gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label invalid --remove-label pending
+            gh issue comment "$NUMBER" --repo "$GH_REPO" --body "$1 Edit the issue to fix it and it will be checked again."
+            exit 0
+          }
+
+          curl --fail --location --max-time 120 --proto '=https' --proto-redir '=https' --output "$temp" "$url" || reject "The download URL could not be downloaded. Make sure it is a direct HTTPS link that works without signing in."
           size=$(stat -c '%s' "$temp")
           if (( size > 536870912 )); then
-            gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label invalid --remove-label pending
-            exit 0
+            reject "The file is larger than the 512 MB limit."
           fi
 
           hash=$(sha256sum "$temp" | awk '{print toupper($1)}')
