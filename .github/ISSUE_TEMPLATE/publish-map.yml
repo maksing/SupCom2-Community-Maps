@@ -4,6 +4,13 @@ title: "[MAP] "
 labels:
   - pending
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Before you submit:
+        - The download must be a **direct HTTPS link** to an `.scd` or `.zip` file, for example a GitHub Releases asset. Pages on Google Drive, Mega, or similar hosts will not work.
+        - Pending maps are unverified. A maintainer reviews each submission before it is marked verified.
+        - Do not edit the generated SHA-256 field; an automatic check fills it in after you submit.
   - type: checkboxes
     id: form_version
     attributes:
@@ -59,31 +66,72 @@ body:
     attributes:
       label: Description
       description: Optional description shown in the launcher.
-  - type: input
+  - type: dropdown
     id: players
     attributes:
       label: Players
-      description: Optional. Match the official catalog format, for example 2 Players or 2v2.
-  - type: input
+      description: Optional. Number of players the map supports.
+      options:
+        - Unknown
+        - 1 Player
+        - 2 Players
+        - 3 Players
+        - 4 Players
+        - 5 Players
+        - 6 Players
+        - 7 Players
+        - 8 Players
+      default: 0
+  - type: dropdown
     id: style
     attributes:
       label: Style
-      description: Optional map/team style, for example FFA or Team.
-  - type: input
+      description: Optional. Select every team layout the map supports, for example 4v4 and 2v2.
+      multiple: true
+      options:
+        - FFA
+        - 1v1
+        - 2v2
+        - 3v3
+        - 4v4
+        - 1v7
+        - 3v3v2
+        - 1vAI
+  - type: dropdown
     id: size
     attributes:
       label: Size
-      description: Optional map size, for example Small, Medium, or Large.
+      description: Optional map size.
+      options:
+        - Unknown
+        - Small
+        - Medium
+        - Large
+      default: 0
   - type: textarea
     id: map_image
     attributes:
       label: Map image
       description: Optional map preview image. Drag an image here or paste it into this field while filling out the form.
-  - type: input
+  - type: dropdown
     id: tags
     attributes:
       label: Tags
-      description: Optional comma-separated tags used by the official catalog.
+      description: Optional. Select every tag that applies, the same tags the official catalog uses. For a map pack, select all player counts and sizes it contains.
+      multiple: true
+      options:
+        - 2 Players
+        - 4 Players
+        - 6 Players
+        - 7 Players
+        - 8 Players
+        - FFA
+        - Team
+        - Small
+        - Medium
+        - Large
+        - Water
+        - Map Pack
   - type: input
     id: sha256
     attributes:

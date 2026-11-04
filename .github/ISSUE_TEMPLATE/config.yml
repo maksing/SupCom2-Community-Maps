@@ -1,1 +1,5 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussion
+    url: https://github.com/maksing/SupCom2-Community-Maps/discussions
+    about: Ask about submitting a map or report a problem with an existing one.
