@@ -10,4 +10,4 @@ By submitting a map through the **Publish map** form you confirm that it follows
 6. **Accurate metadata.** The version, scenario file paths, and optional details (players, style, size, tags) must match the map.
 7. **Respect the community.** Do not spam, submit duplicates, or submit maps made only to disrupt other players.
 
-Editing a verified submission returns it to `pending` for another review. Questions about these rules can be asked in [Discussions](https://github.com/maksing/SupCom2-Community-Maps/discussions).
+Editing a verified submission returns it to `pending` for another review. Questions about these rules can be asked in [Discord](https://discord.gg/3xf6cRn).
