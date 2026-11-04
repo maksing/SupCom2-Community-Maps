@@ -29,7 +29,7 @@ jobs:
         run: |
           valid=true
           grep -q 'I am submitting through the SC2CommunityMaps form v1\.' <<< "$BODY" || valid=false
-          for marker in '### Map name' '### Author' '### Download URL' '### File type' '### Map or game version' '### Description'; do
+          for marker in '### Map name' '### Author' '### Download URL' '### File type'; do
             grep -q "$marker" <<< "$BODY" || valid=false
           done
           url=$(awk '/^### Download URL/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
