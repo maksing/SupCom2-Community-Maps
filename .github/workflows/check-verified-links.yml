@@ -27,34 +27,4 @@ jobs:
           gh label create pending --repo "$GH_REPO" --color FBCA04 --description "Awaiting moderator review" --force
 
       - name: Re-download verified maps
-        shell: bash
-        run: |
-          set -uo pipefail
-          gh issue list --repo "$GH_REPO" --state open --label verified --limit 500 --json number --jq '.[].number' > numbers.txt
-          temp=$(mktemp)
-          trap 'rm -f "$temp" numbers.txt' EXIT
-          while read -r number; do
-            export NUMBER="$number"
-            export BODY
-            BODY=$(gh issue view "$number" --repo "$GH_REPO" --json body --jq .body)
-            url=$(python3 .github/scripts/validate_submission.py url)
-            expected=$(python3 .github/scripts/validate_submission.py sha | tr 'a-f' 'A-F')
-            [[ -n "$url" ]] || continue
-
-            if ! curl --silent --show-error --fail --location --max-time 300 --max-filesize 536870912 \
-                 --proto '=https' --proto-redir '=https' --output "$temp" "$url"; then
-              echo "#$number: download failed"
-              gh issue edit "$number" --repo "$GH_REPO" --remove-label verified --add-label broken
-              gh issue comment "$number" --repo "$GH_REPO" --body "The weekly check could not download this map, so the verified label was removed and the issue was labeled broken. Fix the download URL (edit the issue) and a moderator can verify it again."
-              continue
-            fi
-
-            actual=$(sha256sum "$temp" | awk '{print toupper($1)}')
-            if [[ -n "$expected" && "$actual" != "$expected" ]]; then
-              echo "#$number: file changed"
-              gh issue edit "$number" --repo "$GH_REPO" --remove-label verified --add-label pending
-              gh issue comment "$number" --repo "$GH_REPO" --body "The weekly check found that the file behind the download URL changed after this map was verified (SHA-256 was \`$expected\`, now \`$actual\`). The verified label was removed; edit the issue to submit the new file and a moderator will review it again."
-            else
-              echo "#$number: ok"
-            fi
-          done < numbers.txt
+        run: bash .github/scripts/check_verified.sh

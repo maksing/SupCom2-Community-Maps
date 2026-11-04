@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Fake gh for test_workflows.sh: keeps one issue in $FAKE_DIR (labels.txt, body.txt, comments.txt).
+cmd="$1 $2"; shift 2
+case "$cmd" in
+  "issue view")
+    if [[ "$*" == *labels* ]]; then cat "$FAKE_DIR/labels.txt"; else cat "$FAKE_DIR/body.txt"; fi ;;
+  "issue edit")
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --add-label) grep -qxF "$2" "$FAKE_DIR/labels.txt" || echo "$2" >> "$FAKE_DIR/labels.txt"; shift 2 ;;
+        --remove-label) grep -vxF "$2" "$FAKE_DIR/labels.txt" > "$FAKE_DIR/labels.tmp"; mv "$FAKE_DIR/labels.tmp" "$FAKE_DIR/labels.txt"; shift 2 ;;
+        --body-file) cp "$2" "$FAKE_DIR/body.txt"; shift 2 ;;
+        *) shift ;;
+      esac
+    done ;;
+  "issue comment")
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == --body ]]; then printf '%s\n---\n' "$2" >> "$FAKE_DIR/comments.txt"; shift 2; else shift; fi
+    done ;;
+  "issue list")
+    if [[ "$*" == *--label* ]]; then echo "${FAKE_VERIFIED:-}"; else echo "${FAKE_DUPLICATES:-}"; fi ;;
+  *) ;;
+esac

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Fake curl for test_workflows.sh: "downloads" $FAKE_ARCHIVE, or fails when it is not set.
+[[ -n "${FAKE_ARCHIVE:-}" ]] || exit 22
+while [[ $# -gt 0 ]]; do
+  [[ "$1" == --output ]] && out="$2"
+  shift
+done
+cp "$FAKE_ARCHIVE" "$out"
+printf '%s' "${FAKE_CONTENT_TYPE:-application/octet-stream}"

@@ -23,4 +23,6 @@ Every submission is checked when it is opened or edited. If a check fails, the i
 - The same download URL or file (SHA-256) must not already be submitted in another open issue.
 - The name, author and description must not be too long, and every box of the publication agreement must be ticked.
 
+An issue always has exactly one status label: `pending`, `verified`, `invalid` or `broken` (`rejected` is a moderator decision that the automation never changes, and `promoted` and `hidden` are kept as they are). Adding `verified` to an `invalid` or incomplete submission is undone with a comment, and editing a verified map returns it to `pending`.
+
 Verified maps are downloaded again every week. A map whose download stops working is labeled `broken`, and a map whose file changed after it was verified goes back to `pending`; in both cases the `verified` label is removed.

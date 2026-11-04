@@ -8,6 +8,10 @@ permissions:
   contents: read
   issues: write
 
+concurrency:
+  group: submission-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
 jobs:
   validate:
     if: github.event.label.name == 'verified'
@@ -26,21 +30,11 @@ jobs:
 
       - name: Validate verified issue
         env:
-          BODY: ${{ github.event.issue.body }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           NUMBER: ${{ github.event.issue.number }}
-        shell: bash
         run: |
-          set -uo pipefail
-          errors=$(python3 .github/scripts/validate_submission.py fields)
-          sha=$(python3 .github/scripts/validate_submission.py sha)
-          [[ "$sha" =~ ^[0-9A-Fa-f]{64}$ ]] || errors+=$'\n'"The SHA-256 was not generated; wait for the automatic check to finish, or edit the issue to run it again."
-          errors=$(sed '/^[[:space:]]*$/d' <<< "$errors")
-          if [[ -z "$errors" ]]; then
-            exit 0
-          fi
-          message="The verified label was removed because the submission has problems:"$'\n\n'
-          while IFS= read -r line; do message+="- $line"$'\n'; done <<< "$errors"
-          gh issue edit "$NUMBER" --repo "$GH_REPO" --remove-label verified --add-label pending --add-label invalid
-          gh issue comment "$NUMBER" --repo "$GH_REPO" --body "$message"
+          # Read the body now, not from the event: it may have been edited since the label was added.
+          BODY=$(gh issue view "$NUMBER" --repo "$GH_REPO" --json body --jq .body)
+          export BODY
+          bash .github/scripts/on_verified.sh

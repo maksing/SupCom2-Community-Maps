@@ -1,0 +1,27 @@
+name: Test validation scripts
+
+on:
+  push:
+    paths:
+      - ".github/scripts/**"
+      - ".github/workflows/**"
+  pull_request:
+    paths:
+      - ".github/scripts/**"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unit tests for the submission checks
+        working-directory: .github/scripts
+        run: python3 -m unittest test_validate_submission
+
+      - name: Label and comment behavior of the workflow scripts
+        run: bash .github/scripts/test_workflows.sh
