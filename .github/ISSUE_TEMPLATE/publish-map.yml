@@ -46,12 +46,12 @@ body:
       description: Use exactly three numbers: 1.17.2, 1.0.0, or 2.0.0.
     validations:
       required: true
-  - type: textarea
-    id: scenario_file_path
+  - type: input
+    id: scenario_file_paths
     attributes:
-      label: Scenario File Path
-      description: One or more paths inside the map archive, one per line. Every path must end with .lua.
-      placeholder: /maps/example/example_scenario.lua
+      label: Scenario File Paths
+      description: Required. Enter one or more paths inside the archive separated by semicolons. Every path must end with .lua.
+      placeholder: /maps/example/example_scenario.lua;/maps/example/example_preview.lua
     validations:
       required: true
   - type: textarea
