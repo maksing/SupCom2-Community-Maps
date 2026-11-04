@@ -7,7 +7,8 @@ By submitting a map through the **Publish map** form you confirm that it follows
 3. **No illegal or abusive content.** No hateful, sexually explicit, or otherwise offensive names, descriptions, or preview images.
 4. **No malicious or misleading submissions.** The map must do what the description says. Do not impersonate other authors or mislead users about what the map contains.
 5. **A direct, stable download.** The link must be a direct HTTPS link to an `.scd` or `.zip` file that works without signing in. Do not replace the file behind a link after it has been verified; submit a new version instead.
-6. **Accurate metadata.** The version, scenario file paths, and optional details (players, style, size, tags) must match the map.
-7. **Respect the community.** Do not spam, submit duplicates, or submit maps made only to disrupt other players.
+6. **Standard file name.** Name the file like the official maps, for example `_Map_8p_MapName_v1.0.0_by_author.scd` or `_MapPack_PackName_v1.0.0_by_author.scd`; the README lists the exact convention.
+7. **Accurate metadata.** The version, scenario file paths, and optional details (players, style, size, tags) must match the map.
+8. **Respect the community.** Do not spam, submit duplicates, or submit maps made only to disrupt other players.
 
 Editing a verified submission returns it to `pending` for another review. Questions about these rules can be asked in [Discord](https://discord.gg/3xf6cRn).

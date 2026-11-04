@@ -5,12 +5,16 @@ on:
     types: [opened, reopened, edited]
 
 permissions:
+  contents: read
   issues: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the validation scripts
+        uses: actions/checkout@v4
+
       - name: Ensure workflow labels exist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -19,8 +23,8 @@ jobs:
           gh label create pending --repo "$GH_REPO" --color FBCA04 --description "Awaiting moderator review" --force
           gh label create invalid --repo "$GH_REPO" --color B60205 --description "Submission failed validation" --force
 
-      - name: Validate issue form fields
-        id: validate
+      - name: Check form fields and file name
+        id: fields
         env:
           BODY: ${{ github.event.issue.body }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -28,42 +32,17 @@ jobs:
           NUMBER: ${{ github.event.issue.number }}
         shell: bash
         run: |
-          section() {
-            awk -v h="### $1" '{ sub(/\r$/, "") } $0 == h { f = 1; next } /^### / { f = 0 } f' <<< "$BODY" | sed '/^[[:space:]]*$/d'
-          }
-          errors=()
-          for marker in 'Map name' 'Author' 'Download URL' 'Map or mappack version' 'Scenario File Paths'; do
-            value=$(section "$marker")
-            [[ -n "$value" && "$value" != "_No response_" ]] || errors+=("**$marker** is required.")
-          done
-          url=$(section 'Download URL' | head -n 1 | tr -d ' ')
-          if [[ -n "$url" ]]; then
-            [[ "$url" == https://* ]] || errors+=("**Download URL** must be a direct HTTPS link.")
-            [[ "$url" == *.scd || "$url" == *.zip ]] || errors+=("**Download URL** must end with \`.scd\` or \`.zip\`.")
-          fi
-          version=$(section 'Map or mappack version' | head -n 1 | tr -d ' ')
-          if [[ -n "$version" ]]; then
-            [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || errors+=("**Map or mappack version** must be exactly three numbers such as \`1.0.0\`.")
-          fi
-          while IFS= read -r scenario_path; do
-            scenario_path=$(tr -d ' ' <<< "$scenario_path")
-            [[ -z "$scenario_path" || "$scenario_path" == "_No response_" ]] && continue
-            [[ "$scenario_path" == *.lua ]] || errors+=("Every **Scenario File Path** must end with \`.lua\`; fix the path starting with \`${scenario_path:0:80}\`.")
-          done < <(section 'Scenario File Paths' | tr ';' '\n')
-          if (( ${#errors[@]} == 0 )); then
-            gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label pending --remove-label invalid
-            echo "valid=true" >> "$GITHUB_OUTPUT"
-          else
-            gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label invalid --remove-label pending
-            message="The automatic check found problems with this submission:"$'\n\n'
-            for error in "${errors[@]}"; do message+="- $error"$'\n'; done
-            message+=$'\n'"Edit the issue to fix them and it will be checked again."
-            gh issue comment "$NUMBER" --repo "$GH_REPO" --body "$message"
+          source .github/scripts/common.sh
+          errors=$(python3 .github/scripts/validate_submission.py fields)
+          if [[ -n "$errors" ]]; then
+            mark_invalid "$errors"
             echo "valid=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "valid=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Compute SHA-256 automatically
-        if: steps.validate.outputs.valid == 'true'
+      - name: Check the download and compute SHA-256
+        if: steps.fields.outputs.valid == 'true'
         env:
           BODY: ${{ github.event.issue.body }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -71,25 +50,42 @@ jobs:
           NUMBER: ${{ github.event.issue.number }}
         shell: bash
         run: |
-          set -euo pipefail
-          url=$(awk '/^### Download URL/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
+          set -uo pipefail
+          source .github/scripts/common.sh
+          url=$(python3 .github/scripts/validate_submission.py url)
           temp=$(mktemp)
           body_file=$(mktemp)
           trap 'rm -f "$temp" "$body_file"' EXIT
 
-          reject() {
-            gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label invalid --remove-label pending
-            gh issue comment "$NUMBER" --repo "$GH_REPO" --body "$1 Edit the issue to fix it and it will be checked again."
+          content_type=$(curl --silent --show-error --fail --location --max-time 300 --max-filesize 536870912 \
+            --proto '=https' --proto-redir '=https' --output "$temp" --write-out '%{content_type}' "$url") || {
+            mark_invalid "The download URL could not be downloaded. Make sure it is a direct HTTPS link that works without signing in and that the file is smaller than 512 MB."
             exit 0
           }
-
-          curl --fail --location --max-time 120 --proto '=https' --proto-redir '=https' --output "$temp" "$url" || reject "The download URL could not be downloaded. Make sure it is a direct HTTPS link that works without signing in."
-          size=$(stat -c '%s' "$temp")
-          if (( size > 536870912 )); then
-            reject "The file is larger than the 512 MB limit."
+          if (( $(stat -c '%s' "$temp") > 536870912 )); then
+            mark_invalid "The file is larger than the 512 MB limit."
+            exit 0
+          fi
+          if [[ "$content_type" == text/html* ]]; then
+            mark_invalid "The download URL points to a web page, not directly to the file. Use a direct link, for example a GitHub Releases asset."
+            exit 0
           fi
 
+          errors=$(python3 .github/scripts/validate_submission.py archive "$temp")
           hash=$(sha256sum "$temp" | awk '{print toupper($1)}')
+
+          duplicates=$(open_issues_mentioning "$url")
+          [[ -n "$duplicates" ]] && errors+=$'\n'"The same download URL is already used by $duplicates."
+          duplicates=$(open_issues_mentioning "$hash")
+          [[ -n "$duplicates" ]] && errors+=$'\n'"A file with the same SHA-256 was already submitted in $duplicates."
+
+          errors=$(sed '/^[[:space:]]*$/d' <<< "$errors")
+          if [[ -n "$errors" ]]; then
+            mark_invalid "$errors"
+            exit 0
+          fi
+
+          gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label pending --remove-label invalid
           gh issue view "$NUMBER" --repo "$GH_REPO" --json body --jq .body > "$body_file"
           HASH="$hash" perl -0pi -e 's/(### SHA-256 \(generated automatically\)\s*)(?:_No response_|[^\s]+)?/$1.$ENV{HASH}/e' "$body_file"
           gh issue edit "$NUMBER" --repo "$GH_REPO" --body-file "$body_file"

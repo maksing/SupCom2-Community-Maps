@@ -11,3 +11,16 @@ Supported downloads are direct HTTPS links to `.scd` or `.zip` files. The map na
 If the automatic check finds a problem, it labels the issue `invalid` and comments with what to fix; editing the issue runs the check again. The file type is taken from the download URL, which must end with `.scd` or `.zip`.
 
 Moderators may mark submissions `verified`, `rejected`, `broken`, or `invalid`. Editing a verified submission returns it to `pending` for another review. Missing optional metadata is shown as `Unknown` or `No description available.` in the launcher.
+
+## Automatic checks
+
+Every submission is checked when it is opened or edited. If a check fails, the issue is labeled `invalid` and a comment lists everything to fix:
+
+- **File name** (the last part of the download URL) must follow the naming convention: `_Map_8p_MapName_v1.0.0_by_author.scd` for maps, `_CustomMission_1p_MissionName_v1.0.0_by_author.scd` for custom missions, and `_MapPack_PackName_v1.0.0_by_author.scd` for map packs (no player count). The name uses letters, digits and `-` only, `_by_author` is optional, and the player count is `1p` to `8p`.
+- The version in the file name must equal **Map or mappack version**, and **Players** must match the player count in the file name.
+- **Scenario File Paths** must start with `/maps/`, end with `.lua`, and every path must exist inside the downloaded file.
+- The download must be a direct link to a valid archive of at most 512 MB, not a web page, and must not contain executables or scripts.
+- The same download URL or file (SHA-256) must not already be submitted in another open issue.
+- The name, author and description must not be too long, and every box of the publication agreement must be ticked.
+
+Verified maps are downloaded again every week. A map whose download stops working is labeled `broken`, and a map whose file changed after it was verified goes back to `pending`; in both cases the `verified` label is removed.

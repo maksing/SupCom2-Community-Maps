@@ -5,6 +5,7 @@ on:
     types: [labeled]
 
 permissions:
+  contents: read
   issues: write
 
 jobs:
@@ -12,6 +13,9 @@ jobs:
     if: github.event.label.name == 'verified'
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the validation scripts
+        uses: actions/checkout@v4
+
       - name: Ensure moderation labels exist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -28,15 +32,15 @@ jobs:
           NUMBER: ${{ github.event.issue.number }}
         shell: bash
         run: |
-          set -euo pipefail
-          valid=true
-          for marker in '### Map name' '### Author' '### Download URL' '### Map or mappack version' '### Description' '### SHA-256 (generated automatically)'; do
-            grep -q "$marker" <<< "$BODY" || valid=false
-          done
-          sha=$(awk '/^### SHA-256 \(generated automatically\)/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r' | tr -d ' ')
-          [[ "$sha" =~ ^[0-9A-Fa-f]{64}$ ]] || valid=false
-          if [[ "$valid" == true ]]; then
+          set -uo pipefail
+          errors=$(python3 .github/scripts/validate_submission.py fields)
+          sha=$(python3 .github/scripts/validate_submission.py sha)
+          [[ "$sha" =~ ^[0-9A-Fa-f]{64}$ ]] || errors+=$'\n'"The SHA-256 was not generated; wait for the automatic check to finish, or edit the issue to run it again."
+          errors=$(sed '/^[[:space:]]*$/d' <<< "$errors")
+          if [[ -z "$errors" ]]; then
             exit 0
           fi
+          message="The verified label was removed because the submission has problems:"$'\n\n'
+          while IFS= read -r line; do message+="- $line"$'\n'; done <<< "$errors"
           gh issue edit "$NUMBER" --repo "$GH_REPO" --remove-label verified --add-label pending --add-label invalid
-          gh issue comment "$NUMBER" --repo "$GH_REPO" --body "The verified label was removed because this issue is not a valid community map form or has no generated SHA-256."
+          gh issue comment "$NUMBER" --repo "$GH_REPO" --body "$message"
