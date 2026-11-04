@@ -29,12 +29,14 @@ jobs:
         run: |
           valid=true
           grep -q 'I am submitting through the SC2CommunityMaps form v1\.' <<< "$BODY" || valid=false
-          for marker in '### Map name' '### Author' '### Download URL' '### File type'; do
+          for marker in '### Map name' '### Author' '### Download URL' '### File type' '### Map or mappack version'; do
             grep -q "$marker" <<< "$BODY" || valid=false
           done
           url=$(awk '/^### Download URL/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
           [[ "$url" == https://* ]] || valid=false
           [[ "$url" == *.scd || "$url" == *.zip ]] || valid=false
+          version=$(awk '/^### Map or mappack version/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || valid=false
           if [[ "$valid" == true ]]; then
             gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label pending --remove-label invalid
           else

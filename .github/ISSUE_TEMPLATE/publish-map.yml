@@ -42,8 +42,10 @@ body:
   - type: input
     id: version
     attributes:
-      label: Map or game version
-      description: Optional. For example, 1.0 or a Steam build.
+      label: Map or mappack version
+      description: Use exactly three numbers: 1.17.2, 1.0.0, or 2.0.0.
+    validations:
+      required: true
   - type: textarea
     id: description
     attributes:
