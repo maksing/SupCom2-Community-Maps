@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: |
           valid=true
-          grep -q 'Submission format: `SC2CommunityMaps/v1`' <<< "$BODY" || valid=false
+          grep -q 'I am submitting through the SC2CommunityMaps form v1\.' <<< "$BODY" || valid=false
           for marker in '### Map name' '### Author' '### Download URL' '### File type' '### Map or game version' '### Description'; do
             grep -q "$marker" <<< "$BODY" || valid=false
           done

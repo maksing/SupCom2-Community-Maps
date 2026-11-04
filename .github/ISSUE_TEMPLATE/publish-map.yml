@@ -4,10 +4,13 @@ title: "[MAP] "
 labels:
   - pending
 body:
-  - type: markdown
+  - type: checkboxes
+    id: form_version
     attributes:
-      value: |
-        Submission format: `SC2CommunityMaps/v1`
+      label: Form version
+      options:
+        - label: I am submitting through the SC2CommunityMaps form v1.
+          required: true
   - type: input
     id: map_name
     attributes:
