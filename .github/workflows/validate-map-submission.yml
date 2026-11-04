@@ -9,9 +9,16 @@ permissions:
 
 jobs:
   validate:
-    if: contains(github.event.issue.labels.*.name, 'pending') || startsWith(github.event.issue.title, '[MAP]')
     runs-on: ubuntu-latest
     steps:
+      - name: Ensure workflow labels exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create pending --repo "$GH_REPO" --color FBCA04 --description "Awaiting moderator review" --force
+          gh label create invalid --repo "$GH_REPO" --color B60205 --description "Submission failed validation" --force
+
       - name: Validate issue form fields
         env:
           BODY: ${{ github.event.issue.body }}
