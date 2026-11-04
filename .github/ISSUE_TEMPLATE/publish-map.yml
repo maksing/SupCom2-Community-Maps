@@ -47,7 +47,8 @@ body:
   - type: input
     id: sha256
     attributes:
-      label: SHA-256 (optional)
+      label: SHA-256 (generated automatically)
+      description: Leave this field unchanged. The repository workflow fills it after submission.
   - type: checkboxes
     id: agreement
     attributes:

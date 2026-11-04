@@ -2,7 +2,7 @@ name: Validate map submission
 
 on:
   issues:
-    types: [opened, reopened]
+    types: [opened, reopened, edited]
 
 permissions:
   issues: write
@@ -38,4 +38,31 @@ jobs:
             gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label pending --remove-label invalid
           else
             gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label invalid --remove-label pending
+            exit 0
           fi
+
+      - name: Compute SHA-256 automatically
+        env:
+          BODY: ${{ github.event.issue.body }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          url=$(awk '/^### Download URL/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
+          temp=$(mktemp)
+          body_file=$(mktemp)
+          trap 'rm -f "$temp" "$body_file"' EXIT
+
+          curl --fail --location --max-time 120 --proto '=https' --proto-redir '=https' --output "$temp" "$url"
+          size=$(stat -c '%s' "$temp")
+          if (( size > 536870912 )); then
+            gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label invalid --remove-label pending
+            exit 0
+          fi
+
+          hash=$(sha256sum "$temp" | awk '{print toupper($1)}')
+          gh issue view "$NUMBER" --repo "$GH_REPO" --json body --jq .body > "$body_file"
+          HASH="$hash" perl -0pi -e 's/(### SHA-256 \(generated automatically\)\s*)(?:_No response_|[^\s]+)?/$1.$ENV{HASH}/e' "$body_file"
+          gh issue edit "$NUMBER" --repo "$GH_REPO" --body-file "$body_file"
