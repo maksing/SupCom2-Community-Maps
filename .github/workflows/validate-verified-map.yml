@@ -1,0 +1,43 @@
+name: Validate verified map
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  validate:
+    if: github.event.label.name == 'verified'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure moderation labels exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create pending --repo "$GH_REPO" --color FBCA04 --description "Awaiting moderator review" --force
+          gh label create invalid --repo "$GH_REPO" --color B60205 --description "Submission failed validation" --force
+
+      - name: Validate verified issue
+        env:
+          BODY: ${{ github.event.issue.body }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          valid=true
+          grep -q '<!-- sc2-community-map-form:v1 -->' <<< "$BODY" || valid=false
+          for marker in '### Map name' '### Author' '### Download URL' '### File type' '### Map or game version' '### Description' '### SHA-256 (generated automatically)'; do
+            grep -q "$marker" <<< "$BODY" || valid=false
+          done
+          sha=$(awk '/^### SHA-256 \(generated automatically\)/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r' | tr -d ' ')
+          [[ "$sha" =~ ^[0-9A-Fa-f]{64}$ ]] || valid=false
+          if [[ "$valid" == true ]]; then
+            exit 0
+          fi
+          gh issue edit "$NUMBER" --repo "$GH_REPO" --remove-label verified --add-label pending --add-label invalid
+          gh issue comment "$NUMBER" --repo "$GH_REPO" --body "The verified label was removed because this issue is not a valid community map form or has no generated SHA-256."

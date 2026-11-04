@@ -4,6 +4,10 @@ title: "[MAP] "
 labels:
   - pending
 body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- sc2-community-map-form:v1 -->
   - type: input
     id: map_name
     attributes:
