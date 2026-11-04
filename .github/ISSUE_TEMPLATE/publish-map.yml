@@ -47,6 +47,14 @@ body:
     validations:
       required: true
   - type: textarea
+    id: scenario_file_path
+    attributes:
+      label: Scenario File Path
+      description: One or more paths inside the map archive, one per line. Every path must end with .lua.
+      placeholder: /maps/example/example_scenario.lua
+    validations:
+      required: true
+  - type: textarea
     id: description
     attributes:
       label: Description

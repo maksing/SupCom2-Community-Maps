@@ -29,7 +29,7 @@ jobs:
         run: |
           valid=true
           grep -q 'I am submitting through the SC2CommunityMaps form v1\.' <<< "$BODY" || valid=false
-          for marker in '### Map name' '### Author' '### Download URL' '### File type' '### Map or mappack version'; do
+          for marker in '### Map name' '### Author' '### Download URL' '### File type' '### Map or mappack version' '### Scenario File Path'; do
             grep -q "$marker" <<< "$BODY" || valid=false
           done
           url=$(awk '/^### Download URL/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
@@ -37,6 +37,9 @@ jobs:
           [[ "$url" == *.scd || "$url" == *.zip ]] || valid=false
           version=$(awk '/^### Map or mappack version/{getline; getline; print; exit}' <<< "$BODY" | tr -d '\r')
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || valid=false
+          scenario=$(awk '/^### Scenario File Path/{flag=1; next} /^### /{flag=0} flag' <<< "$BODY" | tr '\r\n' ' ' | xargs)
+          [[ -n "$scenario" ]] || valid=false
+          for scenario_path in $scenario; do [[ "$scenario_path" == *.lua ]] || valid=false; done
           if [[ "$valid" == true ]]; then
             gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label pending --remove-label invalid
           else
