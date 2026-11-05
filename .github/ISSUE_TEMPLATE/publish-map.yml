@@ -46,12 +46,7 @@ body:
     id: scenario_file_paths
     attributes:
       label: Scenario File Paths
-      description: Required. Enter one path inside the archive per line. Every path must end with .lua.
-      placeholder: |
-        /maps/example/example_scenario.lua
-        /maps/example/example_second_scenario.lua
-    validations:
-      required: true
+      description: Leave this field empty. The repository workflow reads the *_scenario.lua files from the root maps folder of your file and fills it in after submission.
   - type: textarea
     id: description
     attributes:

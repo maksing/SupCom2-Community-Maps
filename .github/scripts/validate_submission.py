@@ -6,6 +6,10 @@ Usage (the issue body is read from the BODY environment variable):
     validate_submission.py archive FILE    print the problems found in the downloaded file, one per line
     validate_submission.py collisions ISSUES.json NUMBER [--newer-only] [--hidden]
                                            print the scenario paths that another verified map already uses
+    validate_submission.py scenarios FILE  print the scenario files of the downloaded archive (root maps folder)
+    validate_submission.py set-scenarios PATHS_FILE
+                                           print the issue body with the scenario paths from the file filled in
+    validate_submission.py paths           print the scenario paths currently in the issue body
     validate_submission.py url             print the download URL
     validate_submission.py sha             print the generated SHA-256, if any
     validate_submission.py md5             print the generated MD5, if any
@@ -40,6 +44,7 @@ NESTED_ARCHIVES = (".scd", ".zip")
 MAX_NAME = 80
 MAX_AUTHOR = 120
 MAX_DESCRIPTION = 2000
+MAX_SCENARIOS = 100
 MAX_ENTRIES = 20000
 MAX_UNCOMPRESSED = 2 * 1024 * 1024 * 1024
 
@@ -76,14 +81,11 @@ def check_fields(body):
 
     name, author = value(body, "Map name"), value(body, "Author")
     url, version = value(body, "Download URL"), value(body, "Map or mappack version")
-    paths = scenario_paths(body)
 
     for label, text in (("Map name", name), ("Author", author), ("Download URL", url),
                         ("Map or mappack version", version)):
         if not text:
             errors.append(f"**{label}** is required.")
-    if not paths:
-        errors.append("**Scenario File Paths** is required.")
 
     if name and (len(name) > MAX_NAME or re.search(r"[<>]", name)):
         errors.append(f"**Map name** must be at most {MAX_NAME} characters and must not contain `<` or `>`.")
@@ -131,19 +133,6 @@ def check_fields(body):
                 expected = "1 Player" if players == "1" else f"{players} Players"
                 if selected != expected:
                     errors.append(f"**Players** is `{selected}` but the file name says `{players}p`. They must match.")
-
-    seen = set()
-    for path in paths:
-        if not path.lower().endswith(".lua"):
-            errors.append(f"Every **Scenario File Path** must end with `.lua`; fix `{path[:80]}`.")
-        elif not SCENARIO_PATH.match(path) or ".." in path.split("/"):
-            errors.append(
-                f"**Scenario File Path** `{path[:80]}` must start with `/maps/` and use only letters, digits, "
-                "`_`, `-`, `.` and `/`."
-            )
-        if path.lower() in seen:
-            errors.append(f"**Scenario File Path** `{path[:80]}` is listed more than once.")
-        seen.add(path.lower())
 
     agreement = section(body, "Publication agreement")
     if agreement and not all(line.startswith("- [x]") or line.startswith("- [X]") for line in agreement):
@@ -199,12 +188,46 @@ def check_archive(body, path):
             f"`{forbidden[0][:80]}`."
         )
 
-    available = {name.replace("\\", "/").lstrip("/").lower() for name in names}
-    for path_in_form in scenario_paths(body):
-        if path_in_form.lower().lstrip("/") not in available:
-            errors.append(f"The scenario file `{path_in_form[:80]}` was not found inside the downloaded archive.")
+    found = find_scenarios(path)
+    if not found:
+        errors.append(
+            "The archive has no scenario file: a `*_scenario.lua` file in the root `maps` folder "
+            "(for example `maps/MapName/MapName_scenario.lua`) is required. Files in `uncompiled/maps` do not count."
+        )
+    if len(found) > MAX_SCENARIOS:
+        errors.append(f"The archive has more than {MAX_SCENARIOS} scenario files.")
+    for scenario in found[:MAX_SCENARIOS]:
+        if not SCENARIO_PATH.match(scenario) or ".." in scenario.split("/"):
+            errors.append(
+                f"The scenario file `{scenario[:80]}` may only use letters, digits, `_`, `-`, `.` and `/` in its path."
+            )
 
     return errors
+
+
+def is_scenario(name):
+    lowered = name.replace("\\", "/").lstrip("/").lower()
+    return lowered.startswith("maps/") and lowered.endswith("_scenario.lua")
+
+
+def find_scenarios(path):
+    """The scenario files of an archive as /maps/... paths, sorted.
+
+    They are the *_scenario.lua files in the root maps folder; uncompiled/maps does not count. An archive
+    without a root maps folder (a .zip that holds .scd files) uses the root maps folders of its nested archives.
+    """
+    try:
+        members = archive_members(path)
+    except (zipfile.BadZipFile, NotImplementedError, RuntimeError, OSError):
+        return []
+    outer = {"/" + name.replace("\\", "/").lstrip("/") for name, container in members if container is None and is_scenario(name)}
+    nested = {"/" + name.replace("\\", "/").lstrip("/") for name, container in members if container is not None and is_scenario(name)}
+    return sorted(outer or nested, key=str.lower)
+
+
+def with_scenarios(body, paths):
+    """Body with the scenario file paths filled in, one per line."""
+    return set_section(body, "Scenario File Paths", "\n".join(paths))
 
 
 def path_key(path):
@@ -296,6 +319,18 @@ def main():
     body = os.environ.get("BODY", "")
     if command == "hashes" and len(sys.argv) > 3:
         sys.stdout.write(with_hashes(body, sys.argv[2], sys.argv[3], "--keep-sha" in sys.argv[4:]))
+        return
+    if command == "scenarios" and len(sys.argv) > 2:
+        for scenario in find_scenarios(sys.argv[2]):
+            print(scenario)
+        return
+    if command == "set-scenarios" and len(sys.argv) > 2:
+        with open(sys.argv[2], encoding="utf-8") as handle:
+            sys.stdout.write(with_scenarios(body, [line.strip() for line in handle if line.strip()]))
+        return
+    if command == "paths":
+        for scenario in scenario_paths(body):
+            print(scenario)
         return
     if command == "md5":
         print(value(body, MD5_HEADING).replace(" ", ""))

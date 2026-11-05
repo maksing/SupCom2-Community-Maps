@@ -63,12 +63,9 @@ class FieldTests(unittest.TestCase):
         self.assertTrue(v.check_fields(body(**{"Download URL": "https://example.com/_Map_6p_Forest_v1.0.0.scd?dl=1"})))
         self.assertTrue(v.check_fields(body(**{"Download URL": "https://example.com/download"})))
 
-    def test_scenario_paths(self):
-        multi = "/maps/a/a_scenario.lua\n/maps/a/b_scenario.lua"
-        self.assertEqual(v.check_fields(body(**{"Scenario File Paths": multi})), [])
-        self.assertEqual(v.check_fields(body(**{"Scenario File Paths": "/maps/a/a.lua;/maps/a/b.lua"})), [])
-        for bad in ["/maps/a/a.txt", "maps_only.lua", "/other/a.lua", "/maps/../a.lua", "/maps/a/a.lua\n/maps/A/A.lua"]:
-            self.assertTrue(v.check_fields(body(**{"Scenario File Paths": bad})), bad)
+    def test_the_scenario_field_is_filled_automatically_so_its_content_does_not_matter(self):
+        for text in ["_No response_", "", "/maps/a/a.txt", "anything at all"]:
+            self.assertEqual(v.check_fields(body(**{"Scenario File Paths": text})), [], text)
 
     def test_agreement_must_be_ticked(self):
         errors = v.check_fields(body(**{"Publication agreement": "- [x] one\n- [ ] two"}))
@@ -188,9 +185,47 @@ class ArchiveTests(unittest.TestCase):
         path = self.make_zip({"Maps/bdftm_forest/bdftm_forest_scenario.LUA": "x"})
         self.assertEqual(v.check_archive(body(), path), [])
 
-    def test_missing_scenario(self):
-        path = self.make_zip({"maps/other/other_scenario.lua": "x"})
-        self.assertTrue(any("not found" in e for e in v.check_archive(body(), path)))
+    def test_archive_without_a_scenario_in_the_root_maps_folder(self):
+        path = self.make_zip({"maps/other/other_save.lua": "x", "uncompiled/maps/other/other_scenario.lua": "x"})
+        self.assertTrue(any("no scenario file" in e for e in v.check_archive(body(), path)))
+
+    def test_scenarios_come_from_the_root_maps_folder_only_and_are_sorted(self):
+        path = self.make_zip({
+            "maps/Zeta/Zeta_scenario.lua": "x", "maps/Alpha/Alpha_scenario.lua": "x", "maps/Alpha/Alpha_save.lua": "x",
+            "uncompiled/maps/Alpha/Alpha_scenario.lua": "x", "uncompiled/maps/Other/Other_scenario.lua": "x",
+        })
+        self.assertEqual(v.find_scenarios(path), ["/maps/Alpha/Alpha_scenario.lua", "/maps/Zeta/Zeta_scenario.lua"])
+
+    def test_scenarios_of_nested_archives_are_used_when_there_is_no_root_maps_folder(self):
+        inner = tempfile.NamedTemporaryFile(suffix=".scd", delete=False)
+        inner.close()
+        self.addCleanup(os.unlink, inner.name)
+        with zipfile.ZipFile(inner.name, "w") as archive:
+            archive.writestr("maps/Inner/Inner_scenario.lua", "x")
+        with open(inner.name, "rb") as handle:
+            path = self.make_zip({"pack/Inner.scd": handle.read(), "readme.txt": "x"})
+        self.assertEqual(v.find_scenarios(path), ["/maps/Inner/Inner_scenario.lua"])
+
+    def test_scenario_paths_with_unsupported_characters_are_reported(self):
+        path = self.make_zip({"maps/My Map/My Map_scenario.lua": "x"})
+        self.assertTrue(any("may only use" in e for e in v.check_archive(body(), path)))
+
+    def test_too_many_scenarios(self):
+        path = self.make_zip({f"maps/M{i}/M{i}_scenario.lua": "x" for i in range(v.MAX_SCENARIOS + 1)})
+        self.assertTrue(any("more than" in e for e in v.check_archive(body(), path)))
+
+    def test_not_an_archive_has_no_scenarios(self):
+        handle = tempfile.NamedTemporaryFile(suffix=".scd", delete=False)
+        handle.write(b"nope")
+        handle.close()
+        self.addCleanup(os.unlink, handle.name)
+        self.assertEqual(v.find_scenarios(handle.name), [])
+
+    def test_with_scenarios_replaces_the_field_with_one_path_per_line(self):
+        text = body(**{"Scenario File Paths": "/maps/typed/by_the_author.lua"})
+        result = v.with_scenarios(text, ["/maps/A/A_scenario.lua", "/maps/B/B_scenario.lua"])
+        self.assertEqual(v.scenario_paths(result), ["/maps/A/A_scenario.lua", "/maps/B/B_scenario.lua"])
+        self.assertEqual(v.value(result, "Map name"), "Forest")
 
     def test_scenario_inside_nested_scd(self):
         inner = tempfile.NamedTemporaryFile(suffix=".scd", delete=False)

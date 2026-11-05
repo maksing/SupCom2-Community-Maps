@@ -23,7 +23,8 @@ fi
 url=$(python3 "$validate_script" url)
 temp=$(mktemp)
 body_file=$(mktemp)
-trap 'rm -f "$temp" "$body_file"' EXIT
+scenarios_file=$(mktemp)
+trap 'rm -f "$temp" "$body_file" "$scenarios_file"' EXIT
 
 content_type=$(curl --silent --show-error --fail --location --max-time 300 --max-filesize 536870912 \
   --proto '=https' --proto-redir '=https' --output "$temp" --write-out '%{content_type}' "$url") || {
@@ -40,6 +41,14 @@ if [[ "$content_type" == text/html* ]]; then
 fi
 
 errors=$(python3 "$validate_script" archive "$temp")
+# The scenario paths are read from the file itself (root maps folder). Whatever the author typed into the
+# field is replaced, and the collision check below works on the generated paths.
+original_paths=$(python3 "$validate_script" paths)
+python3 "$validate_script" scenarios "$temp" > "$scenarios_file"
+new_paths=$(cat "$scenarios_file")
+BODY=$(python3 "$validate_script" set-scenarios "$scenarios_file")
+export BODY
+
 # Of two verified maps that share a scenario path the older one keeps its status when everything is rechecked.
 if [[ "${MODE:-normal}" == recheck && "$was_verified" == true ]]; then
   collisions=$(scenario_collisions --newer-only)
@@ -79,9 +88,12 @@ else
 fi
 
 existing_md5=$(python3 "$validate_script" md5 | tr 'a-f' 'A-F')
-if [[ -z "$existing_sha" || "$existing_md5" != "$md5" || ( -z "$keep_sha" && "$existing_sha" != "$hash" ) ]]; then
-  BODY=$(gh issue view "$NUMBER" --repo "$GH_REPO" --json body --jq .body) \
-    python3 "$validate_script" hashes "$hash" "$md5" $keep_sha > "$body_file"
+if [[ -z "$existing_sha" || "$existing_md5" != "$md5" || "$original_paths" != "$new_paths" \
+      || ( -z "$keep_sha" && "$existing_sha" != "$hash" ) ]]; then
+  live_body=$(gh issue view "$NUMBER" --repo "$GH_REPO" --json body --jq .body)
+  BODY="$live_body" python3 "$validate_script" hashes "$hash" "$md5" $keep_sha > "$body_file"
+  BODY=$(cat "$body_file") python3 "$validate_script" set-scenarios "$scenarios_file" > "$body_file.new"
+  mv "$body_file.new" "$body_file"
   gh issue edit "$NUMBER" --repo "$GH_REPO" --body-file "$body_file"
 fi
 
@@ -89,8 +101,9 @@ fi
 if [[ "${MODE:-normal}" != recheck ]]; then
   message="The map passed the automatic check:"$'\n\n'
   message+="- the file name follows the naming convention and matches the version and player count"$'\n'
-  message+="- the file downloads, is a valid archive without forbidden files, and contains every scenario file"$'\n'
+  message+="- the file downloads, is a valid archive without forbidden files, and has scenario files in the root maps folder"$'\n'
   message+="- the scenario paths are not used by another verified map, and the download is not a duplicate"$'\n\n'
+  message+="Scenario File Paths (read from the file):"$'\n\n'"$(bullet_list "$new_paths")"$'\n'
   message+="SHA-256: \`$hash\`"$'\n'"MD5: \`$md5\`"$'\n\n'
   if [[ "$was_verified" == true ]]; then
     message+="The map was verified before, but it changed, so a moderator has to review it again."

@@ -16,7 +16,12 @@ with zipfile.ZipFile(work + "/good.scd", "w") as z:
 with zipfile.ZipFile(work + "/other.scd", "w") as z:
     z.writestr("maps/BDFTM_Forest/BDFTM_Forest_scenario.lua", "different file")
 with zipfile.ZipFile(work + "/bad.scd", "w") as z:
-    z.writestr("maps/other/other_scenario.lua", "x")
+    z.writestr("maps/other/other_save.lua", "x")
+    z.writestr("uncompiled/maps/other/other_scenario.lua", "x")
+with zipfile.ZipFile(work + "/pack.scd", "w") as z:
+    z.writestr("maps/Alpha/Alpha_scenario.lua", "x")
+    z.writestr("maps/Beta/Beta_scenario.lua", "x")
+    z.writestr("uncompiled/maps/Alpha/Alpha_scenario.lua", "x")
 PY
 good_sha=$(sha256sum "$work/good.scd" | awk '{print toupper($1)}')
 
@@ -24,9 +29,13 @@ failures=0
 pass() { echo "ok   - $1"; }
 fail() { echo "FAIL - $1"; failures=$((failures + 1)); }
 
-# make_body <file name> <sha or "_No response_">
+# make_body <file name> <sha or "_No response_"> [md5]: the MD5 is a dummy value when a SHA-256 is given
 make_body() {
-  printf '### Map name\n\nForest\n\n### Author\n\nA\n\n### Download URL\n\nhttps://example.com/%s\n\n### Map or mappack version\n\n1.0.0\n\n### Scenario File Paths\n\n/maps/BDFTM_Forest/BDFTM_Forest_scenario.lua\n\n### Players\n\n6 Players\n\n### SHA-256 (generated automatically)\n\n%s\n\n### Publication agreement\n\n- [x] a\n- [x] b\n' "$1" "$2"
+  local md5="${3:-}"
+  if [[ -z "$md5" ]]; then
+    if [[ "$2" == "_No response_" ]]; then md5="_No response_"; else md5=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB; fi
+  fi
+  printf '### Map name\n\nForest\n\n### Author\n\nA\n\n### Download URL\n\nhttps://example.com/%s\n\n### Map or mappack version\n\n1.0.0\n\n### Scenario File Paths\n\n/maps/BDFTM_Forest/BDFTM_Forest_scenario.lua\n\n### Players\n\n6 Players\n\n### SHA-256 (generated automatically)\n\n%s\n\n### MD5 (generated automatically)\n\n%s\n\n### Publication agreement\n\n- [x] a\n- [x] b\n' "$1" "$2" "$md5"
 }
 # start <body> <labels...>
 start() {
@@ -62,8 +71,8 @@ expect_body_lacks "invalid submission gets no SHA-256" "$good_sha"
 
 start "$(make_body $valid_name '_No response_')" pending
 FAKE_ARCHIVE=$work/bad.scd run on_submission.sh
-expect_labels "scenario missing from the archive makes it invalid" invalid
-expect_comment "missing scenario is explained" "not found inside"
+expect_labels "no scenario in the root maps folder makes it invalid" invalid
+expect_comment "missing scenario is explained" "no scenario file"
 
 start "$(make_body $valid_name '_No response_')" pending
 run on_submission.sh
@@ -179,6 +188,32 @@ FAKE_OPEN=7 APPLY=true bash "$here/recheck_all.sh" > "$work/skip.txt"
 expect_labels "recheck leaves issues that are not submissions alone" pending
 grep -q "skipped" "$work/skip.txt" && pass "recheck reports skipped issues" || fail "recheck does not report skipped issues"
 
+# --- generated scenario paths ---
+start "$(make_body $valid_name '_No response_')" pending
+FAKE_ARCHIVE=$work/pack.scd run on_submission.sh
+expect_labels "a pack without typed scenario paths is valid" pending
+expect_body_has "scenario paths are read from the root maps folder" "/maps/Alpha/Alpha_scenario.lua"
+expect_body_has "every map of the pack is listed" "/maps/Beta/Beta_scenario.lua"
+expect_body_lacks "the typed path is replaced" "BDFTM_Forest"
+expect_comment "the comment lists the generated paths" "/maps/Beta/Beta_scenario.lua"
+
+start "$(make_body $valid_name "$good_sha")" pending
+sed -i 's#/maps/BDFTM_Forest/BDFTM_Forest_scenario.lua#_No response_#' "$FAKE_DIR/body.txt"
+FAKE_ARCHIVE=$work/good.scd run on_submission.sh
+expect_labels "an empty scenario field is filled in, not rejected" pending
+expect_body_has "the empty scenario field gets the path from the file" "/maps/BDFTM_Forest/BDFTM_Forest_scenario.lua"
+
+start "$(make_body $valid_name "$good_sha")" pending verified
+sed -i 's#/maps/BDFTM_Forest/BDFTM_Forest_scenario.lua#_No response_#' "$FAKE_DIR/body.txt"
+run on_verified.sh
+expect_labels "verified without generated scenario paths goes back to pending" pending
+expect_comment "missing scenario paths are explained" "scenario paths were not read"
+
+start "$(make_body $valid_name "$good_sha" '_No response_')" pending verified
+run on_verified.sh
+expect_labels "verified without an MD5 goes back to pending" pending
+expect_comment "missing MD5 is explained" "MD5"
+
 # --- MD5 ---
 good_md5=$(md5sum "$work/good.scd" | awk '{print toupper($1)}')
 
@@ -187,7 +222,7 @@ FAKE_ARCHIVE=$work/good.scd run on_submission.sh
 expect_body_has "valid submission gets its MD5" "### MD5 (generated automatically)"
 expect_body_has "valid submission gets the MD5 value" "$good_md5"
 
-start "$(make_body $valid_name "$good_sha")" verified
+start "$(make_body $valid_name "$good_sha" '_No response_')" verified
 FAKE_OPEN=7 FAKE_ARCHIVE=$work/good.scd APPLY=true bash "$here/recheck_all.sh" >/dev/null
 expect_labels "recheck of a verified map without MD5 keeps it verified" verified
 expect_body_has "recheck adds the missing MD5" "$good_md5"

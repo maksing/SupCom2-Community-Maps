@@ -103,6 +103,9 @@ def build(issues):
         if not re.fullmatch(r"[0-9A-Fa-f]{64}", v.value(issue.get("body") or "", SHA_HEADING).replace(" ", "")):
             print(f"#{issue['number']}: skipped, no SHA-256 yet", file=sys.stderr)
             continue
+        if not v.scenario_paths(issue.get("body") or ""):
+            print(f"#{issue['number']}: skipped, no scenario paths yet", file=sys.stderr)
+            continue
         problems = v.check_fields(issue.get("body") or "")
         if problems:
             print(f"#{issue['number']}: skipped, {problems[0]}", file=sys.stderr)

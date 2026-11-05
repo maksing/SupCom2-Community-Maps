@@ -23,6 +23,12 @@ if [[ -n "$errors" ]]; then
   exit 0
 fi
 
+if [[ -z "$(python3 "$validate_script" paths)" ]]; then
+  set_status pending
+  gh issue comment "$NUMBER" --repo "$GH_REPO" --body "The verified label was removed because the scenario paths were not read from the file yet. Wait for the automatic check to finish (or edit the issue to run it again) and verify it again."
+  exit 0
+fi
+
 errors=$(scenario_collisions)
 if [[ -n "$errors" ]]; then
   set_status invalid
@@ -34,6 +40,13 @@ sha=$(python3 "$validate_script" sha)
 if ! [[ "$sha" =~ ^[0-9A-Fa-f]{64}$ ]]; then
   set_status pending
   gh issue comment "$NUMBER" --repo "$GH_REPO" --body "The verified label was removed because the SHA-256 was not generated yet. Wait for the automatic check to finish (or edit the issue to run it again) and verify it again."
+  exit 0
+fi
+
+md5=$(python3 "$validate_script" md5)
+if ! [[ "$md5" =~ ^[0-9A-Fa-f]{32}$ ]]; then
+  set_status pending
+  gh issue comment "$NUMBER" --repo "$GH_REPO" --body "The verified label was removed because the MD5 was not generated yet. Wait for the automatic check to finish (or edit the issue to run it again) and verify it again."
   exit 0
 fi
 
