@@ -61,6 +61,18 @@ open_issues_mentioning() {
     --jq "[.[].number | select(. < $NUMBER)] | map(\"#\(.)\") | join(\", \")"
 }
 
+# scenario_collisions [--newer-only]: prints the scenario paths of the issue (BODY) that another verified map
+# already uses. Hidden maps are neither checked nor counted. With --newer-only only older issues count.
+scenario_collisions() {
+  local issues_file args=()
+  issues_file=$(mktemp)
+  gh issue list --repo "$GH_REPO" --state open --label verified --limit 1000 --json number,body,labels,url > "$issues_file"
+  [[ "${1:-}" == "--newer-only" ]] && args+=(--newer-only)
+  has_label hidden && args+=(--hidden)
+  python3 "$validate_script" collisions "$issues_file" "$NUMBER" ${args[@]+"${args[@]}"}
+  rm -f "$issues_file"
+}
+
 # without_blank_lines "<text>"
 without_blank_lines() {
   sed '/^[[:space:]]*$/d' <<< "$1"

@@ -78,6 +78,56 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(v.check_fields(body().replace("\n", "\r\n")), [])
 
 
+def other(number, paths, *labels):
+    return {"number": number, "body": body(**{"Scenario File Paths": paths}), "labels": [{"name": n} for n in labels]}
+
+
+class CollisionTests(unittest.TestCase):
+    OWN = "/maps/A/A_scenario.lua\n/maps/A/B_scenario.lua"
+
+    def check(self, issues, newer_only=False, hidden=False, number=10):
+        return v.check_collisions(body(**{"Scenario File Paths": self.OWN}), number, issues, newer_only, hidden)
+
+    def test_one_shared_path_is_a_collision_even_when_the_maps_have_more_paths(self):
+        errors = self.check([other(3, "/maps/A/B_scenario.lua\n/maps/Z/Z_scenario.lua", "verified")])
+        self.assertEqual(len(errors), 1)
+        self.assertIn("/maps/A/B_scenario.lua", errors[0])
+        self.assertIn("#3", errors[0])
+
+    def test_no_shared_path_is_no_collision(self):
+        self.assertEqual(self.check([other(3, "/maps/Z/Z_scenario.lua", "verified")]), [])
+
+    def test_a_pack_of_many_paths_does_not_collide_without_a_shared_single_path(self):
+        self.assertEqual(self.check([other(3, "/maps/Z/Z_scenario.lua\n/maps/Y/Y_scenario.lua", "verified")]), [])
+
+    def test_case_and_leading_slash_do_not_matter(self):
+        self.assertEqual(len(self.check([other(3, "maps/a/a_SCENARIO.lua", "verified")])), 1)
+
+    def test_only_verified_maps_count(self):
+        self.assertEqual(self.check([other(3, self.OWN, "pending"), other(4, self.OWN, "invalid")]), [])
+
+    def test_hidden_maps_are_ignored(self):
+        self.assertEqual(self.check([other(3, self.OWN, "verified", "hidden")]), [])
+
+    def test_a_hidden_map_is_not_checked(self):
+        self.assertEqual(self.check([other(3, self.OWN, "verified")], hidden=True), [])
+
+    def test_the_map_itself_is_ignored(self):
+        self.assertEqual(self.check([other(10, self.OWN, "verified")]), [])
+
+    def test_newer_only_keeps_the_older_map(self):
+        issues = [other(3, self.OWN, "verified"), other(20, self.OWN, "verified")]
+        errors = self.check(issues, newer_only=True)
+        self.assertEqual(len(errors), 2)
+        self.assertIn("#3", errors[0])
+        self.assertNotIn("#20", errors[0])
+
+    def test_every_colliding_owner_is_listed_once_per_path(self):
+        errors = self.check([other(3, self.OWN, "verified"), other(4, self.OWN, "verified")])
+        self.assertEqual(len(errors), 2)
+        self.assertIn("#3, #4", errors[0])
+
+
 class HashTests(unittest.TestCase):
     SHA = "A" * 64
     MD5 = "B" * 32

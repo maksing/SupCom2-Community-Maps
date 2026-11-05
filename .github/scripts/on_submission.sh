@@ -40,6 +40,13 @@ if [[ "$content_type" == text/html* ]]; then
 fi
 
 errors=$(python3 "$validate_script" archive "$temp")
+# Of two verified maps that share a scenario path the older one keeps its status when everything is rechecked.
+if [[ "${MODE:-normal}" == recheck && "$was_verified" == true ]]; then
+  collisions=$(scenario_collisions --newer-only)
+else
+  collisions=$(scenario_collisions)
+fi
+[[ -n "$collisions" ]] && errors+=$'\n'"$collisions"
 hash=$(sha256sum "$temp" | awk '{print toupper($1)}')
 md5=$(md5sum "$temp" | awk '{print toupper($1)}')
 
@@ -78,6 +85,17 @@ if [[ -z "$existing_sha" || "$existing_md5" != "$md5" || ( -z "$keep_sha" && "$e
   gh issue edit "$NUMBER" --repo "$GH_REPO" --body-file "$body_file"
 fi
 
-if [[ "$was_verified" == true && "${MODE:-normal}" != recheck ]]; then
-  gh issue comment "$NUMBER" --repo "$GH_REPO" --body "This submission changed after verification and requires review again."
+# Tell the author that the check passed (not when everything is rechecked, which would comment on every map).
+if [[ "${MODE:-normal}" != recheck ]]; then
+  message="The map passed the automatic check:"$'\n\n'
+  message+="- the file name follows the naming convention and matches the version and player count"$'\n'
+  message+="- the file downloads, is a valid archive without forbidden files, and contains every scenario file"$'\n'
+  message+="- the scenario paths are not used by another verified map, and the download is not a duplicate"$'\n\n'
+  message+="SHA-256: \`$hash\`"$'\n'"MD5: \`$md5\`"$'\n\n'
+  if [[ "$was_verified" == true ]]; then
+    message+="The map was verified before, but it changed, so a moderator has to review it again."
+  else
+    message+="A moderator will review it next."
+  fi
+  gh issue comment "$NUMBER" --repo "$GH_REPO" --body "$message"
 fi

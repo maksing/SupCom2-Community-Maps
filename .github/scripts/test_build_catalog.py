@@ -9,6 +9,7 @@ MD5 = "B" * 32
 
 def issue(number, labels, **fields):
     defaults = {
+        "Scenario File Paths": f"/maps/Map{number}/Map{number}_scenario.lua",
         "SHA-256 (generated automatically)": SHA,
         "MD5 (generated automatically)": MD5,
         "Style": "3v3",
@@ -57,7 +58,7 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(m["mapName"], "Forest")
         self.assertEqual(m["description"], "Test")
         self.assertEqual(m["tags"], ["6 Players", "Team", "Medium"])
-        self.assertEqual(m["scenarioFilePath"], "/maps/BDFTM_Forest/BDFTM_Forest_scenario.lua")
+        self.assertEqual(m["scenarioFilePath"], "/maps/Map1/Map1_scenario.lua")
         self.assertEqual(m["mapPictureUrl"], "https://github.com/user-attachments/assets/abc")
         self.assertEqual(m["sha256"], SHA)
         self.assertEqual(m["modHash"], MD5)
@@ -81,6 +82,21 @@ class CatalogTests(unittest.TestCase):
             issue(4, ["verified"], **{"SHA-256 (generated automatically)": "_No response_"}),
             issue(5, ["verified"]),
         ]
+        _, community = b.build(issues)
+        self.assertEqual([m["sourceIssueNumber"] for m in community], [5])
+
+    def test_a_shared_scenario_path_keeps_only_the_older_map(self):
+        issues = [
+            issue(5, ["verified"], **{"Scenario File Paths": "/maps/A/A_scenario.lua\n/maps/B/B_scenario.lua"}),
+            issue(3, ["verified", "promoted"], **{"Scenario File Paths": "/maps/b/b_SCENARIO.lua"}),
+            issue(7, ["verified"], **{"Scenario File Paths": "/maps/C/C_scenario.lua"}),
+        ]
+        official, community = b.build(issues)
+        self.assertEqual([m["sourceIssueNumber"] for m in official], [3])
+        self.assertEqual([m["sourceIssueNumber"] for m in community], [7])
+
+    def test_a_hidden_map_does_not_take_a_scenario_path(self):
+        issues = [issue(3, ["verified", "hidden"]), issue(5, ["verified"])]
         _, community = b.build(issues)
         self.assertEqual([m["sourceIssueNumber"] for m in community], [5])
 

@@ -4,6 +4,8 @@
 Usage (the issue body is read from the BODY environment variable):
     validate_submission.py fields          print the problems found in the form fields, one per line
     validate_submission.py archive FILE    print the problems found in the downloaded file, one per line
+    validate_submission.py collisions ISSUES.json NUMBER [--newer-only] [--hidden]
+                                           print the scenario paths that another verified map already uses
     validate_submission.py url             print the download URL
     validate_submission.py sha             print the generated SHA-256, if any
     validate_submission.py md5             print the generated MD5, if any
@@ -14,6 +16,7 @@ Usage (the issue body is read from the BODY environment variable):
 The commands that check things exit with 0 and an empty output when everything is fine.
 Output lines are meant to be posted as an issue comment, so they are written for the map author.
 """
+import json
 import os
 import posixpath
 import re
@@ -204,6 +207,46 @@ def check_archive(body, path):
     return errors
 
 
+def path_key(path):
+    """Scenario paths are compared without case and without the leading slash."""
+    return path.strip().lower().lstrip("/")
+
+
+def check_collisions(body, number, issues, newer_only=False, hidden=False):
+    """Problems for scenario paths that another verified map already uses.
+
+    Only single paths count: one shared path is a collision, whatever else the two maps contain.
+    Hidden maps are not in the catalog, so they neither collide nor are checked (hidden says whether this
+    issue is hidden). With newer_only, only lower-numbered issues count, so of two colliding maps the older
+    one keeps its status.
+    """
+    if hidden:
+        return []
+    owners = {}
+    for other in issues:
+        names = {label["name"].lower() for label in other.get("labels", [])}
+        if other["number"] == number or "verified" not in names or "hidden" in names:
+            continue
+        if newer_only and other["number"] > number:
+            continue
+        for path in scenario_paths(other.get("body") or ""):
+            owners.setdefault(path_key(path), []).append(other)
+
+    errors, reported = [], set()
+    for path in scenario_paths(body):
+        key = path_key(path)
+        if key in reported or key not in owners:
+            continue
+        reported.add(key)
+        users = ", ".join(f"#{o['number']}" for o in owners[key])
+        errors.append(
+            f"The scenario file path `{path[:80]}` is already used by the verified map {users}. "
+            "Every map needs its own scenario paths: rename the map folder and files inside the archive, "
+            "upload it again, and update **Scenario File Paths** and the **Download URL**."
+        )
+    return errors
+
+
 SHA_HEADING = "SHA-256 (generated automatically)"
 MD5_HEADING = "MD5 (generated automatically)"
 
@@ -261,6 +304,11 @@ def main():
         errors = check_fields(body)
     elif command == "archive" and len(sys.argv) > 2:
         errors = check_archive(body, sys.argv[2])
+    elif command == "collisions" and len(sys.argv) > 3:
+        with open(sys.argv[2], encoding="utf-8") as handle:
+            issues = json.load(handle)
+        errors = check_collisions(body, int(sys.argv[3]), issues, newer_only="--newer-only" in sys.argv[4:],
+                                  hidden="--hidden" in sys.argv[4:])
     elif command == "url":
         print(value(body, "Download URL").replace(" ", ""))
         return

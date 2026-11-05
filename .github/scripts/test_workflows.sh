@@ -34,7 +34,7 @@ start() {
   printf '%s\n' "$1" > "$FAKE_DIR/body.txt"; shift
   : > "$FAKE_DIR/labels.txt"; : > "$FAKE_DIR/comments.txt"
   for label in "$@"; do echo "$label" >> "$FAKE_DIR/labels.txt"; done
-  unset FAKE_ARCHIVE FAKE_CONTENT_TYPE FAKE_DUPLICATES FAKE_VERIFIED FAKE_OPEN
+  unset FAKE_ARCHIVE FAKE_CONTENT_TYPE FAKE_DUPLICATES FAKE_VERIFIED FAKE_OPEN FAKE_ISSUES_FILE
 }
 run() { BODY=$(cat "$FAKE_DIR/body.txt") bash "$here/$1" >/dev/null; }
 labels() { sort "$FAKE_DIR/labels.txt" | paste -sd, -; }
@@ -52,7 +52,7 @@ start "$(make_body $valid_name '_No response_')" pending
 FAKE_ARCHIVE=$work/good.scd run on_submission.sh
 expect_labels "valid new submission is pending" pending
 expect_body_has "valid new submission gets its SHA-256" "$good_sha"
-expect_no_comment "valid new submission gets no comment"
+expect_comment "valid new submission gets a passed message" "passed the automatic check"
 
 start "$(make_body $invalid_name '_No response_')" pending
 run on_submission.sh
@@ -90,7 +90,7 @@ expect_labels "fixed invalid submission becomes pending only" pending
 start "$(make_body $valid_name "$good_sha")" verified promoted
 FAKE_ARCHIVE=$work/good.scd run on_submission.sh
 expect_labels "edited verified map returns to pending and keeps promoted" pending,promoted
-expect_comment "edited verified map is explained" "requires review again"
+expect_comment "edited verified map is explained" "review it again"
 
 start "$(make_body $invalid_name "$good_sha")" verified
 run on_submission.sh
@@ -199,13 +199,66 @@ expect_labels "recheck of a verified map whose file changed makes it invalid" in
 expect_comment "recheck explains the changed file" "changed after the map was verified"
 expect_body_has "recheck does not overwrite the verified SHA-256" "$good_sha"
 
+# --- scenario path collisions ---
+# collision_issues <number> <labels>: one other issue with the same scenario path as the issues under test
+collision_issues() {
+  python3 - "$(make_body $valid_name "$good_sha")" "$1" "$2" <<'PY'
+import json, sys
+body, number, labels = sys.argv[1], int(sys.argv[2]), sys.argv[3].split(",")
+print(json.dumps([{"number": number, "url": "", "body": body, "labels": [{"name": n} for n in labels]}]))
+PY
+}
+
+start "$(make_body $valid_name '_No response_')" pending
+collision_issues 3 verified > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd run on_submission.sh
+expect_labels "a path used by a verified map makes the submission invalid" invalid
+expect_comment "the collision names the other map" "already used by the verified map #3"
+
+start "$(make_body $valid_name '_No response_')" pending
+collision_issues 3 verified,hidden > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd run on_submission.sh
+expect_labels "a hidden verified map is ignored in the collision check" pending
+
+start "$(make_body $valid_name '_No response_')" pending hidden
+collision_issues 3 verified > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd run on_submission.sh
+expect_labels "a hidden submission is not checked for collisions" hidden,pending
+
+start "$(make_body $valid_name '_No response_')" pending
+collision_issues 3 pending > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd run on_submission.sh
+expect_labels "a pending map with the same path is not a collision" pending
+
+start "$(make_body $valid_name "$good_sha")" pending verified
+collision_issues 3 verified > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json run on_verified.sh
+expect_labels "verifying a map whose path is used by a verified map makes it invalid" invalid
+expect_comment "verification explains the collision" "collisions"
+
+start "$(make_body $valid_name "$good_sha")" pending verified
+collision_issues 3 verified,hidden > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json run on_verified.sh
+expect_labels "verifying is fine when the other map is hidden" verified
+
+start "$(make_body $valid_name "$good_sha")" verified
+collision_issues 3 verified > "$work/others.json"
+FAKE_OPEN=7 FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd APPLY=true bash "$here/recheck_all.sh" >/dev/null
+expect_labels "recheck makes the newer of two colliding verified maps invalid" invalid
+
+start "$(make_body $valid_name "$good_sha")" verified
+collision_issues 9 verified > "$work/others.json"
+FAKE_OPEN=7 FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd APPLY=true bash "$here/recheck_all.sh" >/dev/null
+expect_labels "recheck keeps the older of two colliding verified maps" verified
+
 # --- the catalog branch ---
 catalog_issues() { # catalog_issues <labels of issue 2>: a promoted, a community-or-other and a hidden issue
   python3 - "$(make_body $valid_name "$good_sha")" "$1" <<'PY'
 import json, sys
 body, labels = sys.argv[1], sys.argv[2].split(",")
 def issue(number, names):
-    return {"number": number, "url": f"https://example.com/{number}", "body": body, "labels": [{"name": n} for n in names]}
+    own_body = body.replace("/maps/BDFTM_Forest/BDFTM_Forest_scenario.lua", f"/maps/F{number}/F{number}_scenario.lua")
+    return {"number": number, "url": f"https://example.com/{number}", "body": own_body, "labels": [{"name": n} for n in names]}
 print(json.dumps([issue(1, ["verified", "promoted"]), issue(2, labels), issue(3, ["verified", "hidden"])]))
 PY
 }

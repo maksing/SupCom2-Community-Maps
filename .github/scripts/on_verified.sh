@@ -23,6 +23,13 @@ if [[ -n "$errors" ]]; then
   exit 0
 fi
 
+errors=$(scenario_collisions)
+if [[ -n "$errors" ]]; then
+  set_status invalid
+  gh issue comment "$NUMBER" --repo "$GH_REPO" --body "The verified label was removed because of scenario path collisions with other verified maps:"$'\n\n'"$(bullet_list "$errors")"$'\n'"Edit the issue to fix them and it will be checked again."
+  exit 0
+fi
+
 sha=$(python3 "$validate_script" sha)
 if ! [[ "$sha" =~ ^[0-9A-Fa-f]{64}$ ]]; then
   set_status pending

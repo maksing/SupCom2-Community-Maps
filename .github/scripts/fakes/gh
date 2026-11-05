@@ -20,7 +20,7 @@ case "$cmd" in
   "api "*|"api")
     echo "${FAKE_VERIFIED_AT:-2026-11-04T16:44:09Z}" ;;
   "issue list")
-    if [[ "$*" == *number,body,labels,url* ]]; then cat "$FAKE_ISSUES_FILE"
+    if [[ "$*" == *number,body,labels,url* ]]; then cat "${FAKE_ISSUES_FILE:-/dev/null}"; [[ -n "${FAKE_ISSUES_FILE:-}" ]] || echo "[]"
     elif [[ "$*" == *--search* ]]; then echo "${FAKE_DUPLICATES:-}"
     elif [[ "$*" == *--label* ]]; then echo "${FAKE_VERIFIED:-}"
     else echo "${FAKE_OPEN:-}"; fi ;;

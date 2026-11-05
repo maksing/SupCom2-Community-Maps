@@ -95,6 +95,7 @@ def entry(issue, official):
 
 def build(issues):
     official, community = [], []
+    used = set()
     for issue in sorted(issues, key=lambda i: i["number"]):
         labels = {label["name"].lower() for label in issue.get("labels", [])}
         if "verified" not in labels or "hidden" in labels or labels & {"pending", "invalid", "broken", "rejected"}:
@@ -106,6 +107,13 @@ def build(issues):
         if problems:
             print(f"#{issue['number']}: skipped, {problems[0]}", file=sys.stderr)
             continue
+        # No two maps of the catalog may share a scenario path; the older map keeps it.
+        keys = {v.path_key(path) for path in v.scenario_paths(issue.get("body") or "")}
+        taken = keys & used
+        if taken:
+            print(f"#{issue['number']}: skipped, scenario path {sorted(taken)[0]} is used by an older map", file=sys.stderr)
+            continue
+        used |= keys
         is_official = "promoted" in labels
         (official if is_official else community).append(entry(issue, is_official))
     return official, community

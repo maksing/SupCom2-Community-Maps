@@ -21,6 +21,9 @@ Every submission is checked when it is opened or edited. If a check fails, the i
 - **Scenario File Paths** must start with `/maps/`, end with `.lua`, and every path must exist inside the downloaded file.
 - The download must be a direct link to a valid archive of at most 512 MB, not a web page, and must not contain executables or scripts.
 - The same download URL or file (SHA-256) must not already be submitted in another open issue.
+- Every single **Scenario File Path** must be unique among verified maps: if another verified map already uses one of the paths (whatever else the two maps contain), the submission becomes `invalid`, and so does a map that is verified while it collides. Maps that are also labeled `hidden` are not part of the catalog and are left out of this check. When everything is rechecked, the older of two colliding maps keeps its status.
+
+When a submission passes all checks, the bot comments that it passed and shows the SHA-256 and MD5 of the file.
 - The name, author and description must not be too long, and every box of the publication agreement must be ticked.
 
 An issue always has exactly one status label: `pending`, `verified`, `invalid` or `broken` (`rejected` is a moderator decision that the automation never changes, and `promoted` and `hidden` are kept as they are). Adding `verified` to an `invalid` or incomplete submission is undone with a comment, and editing a verified map returns it to `pending`.
