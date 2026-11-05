@@ -5,7 +5,7 @@
     "author": "blu azur",
     "type": "Map",
     "version": "v1.0.0",
-    "lastUpdatedDate": "04.11.2026",
+    "lastUpdatedDate": "05.11.2026",
     "downloadURL": "https://github.com/maksing/SC2maps/releases/download/Europa_Research_Site/_Map_8p_AZU-Europa-Research-Site_v1.0.0_by_blu-azur.scd",
     "playerCount": "8",
     "mapTeamStyle": "4v4",
@@ -21,6 +21,6 @@
     "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/11",
     "moderationStatus": "verified",
     "sha256": "05B4B6507DDB7C41CD5BE14210F78D9B4F3BB62F7C821D9A3299A9BC77305BF0",
-    "modHash": ""
+    "modHash": "FE73DEC08F82FCA74DC5A1107F525711"
   }
 ]
