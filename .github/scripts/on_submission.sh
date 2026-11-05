@@ -16,6 +16,7 @@ has_label verified "$labels" && was_verified=true
 
 errors=$(python3 "$validate_script" fields)
 if [[ -n "$errors" ]]; then
+  set_collision false
   mark_invalid "$errors"
   exit 0
 fi
@@ -28,14 +29,17 @@ trap 'rm -f "$temp" "$body_file" "$scenarios_file"' EXIT
 
 content_type=$(curl --silent --show-error --fail --location --max-time 300 --max-filesize 536870912 \
   --proto '=https' --proto-redir '=https' --output "$temp" --write-out '%{content_type}' "$url") || {
+  set_collision false
   mark_invalid "The download URL could not be downloaded. Make sure it is a direct HTTPS link that works without signing in and that the file is smaller than 512 MB."
   exit 0
 }
 if (( $(stat -c '%s' "$temp") > 536870912 )); then
+  set_collision false
   mark_invalid "The file is larger than the 512 MB limit."
   exit 0
 fi
 if [[ "$content_type" == text/html* ]]; then
+  set_collision false
   mark_invalid "The download URL points to a web page, not directly to the file. Use a direct link, for example a GitHub Releases asset."
   exit 0
 fi
@@ -55,7 +59,12 @@ if [[ "${MODE:-normal}" == recheck && "$was_verified" == true ]]; then
 else
   collisions=$(scenario_collisions)
 fi
-[[ -n "$collisions" ]] && errors+=$'\n'"$collisions"
+if [[ -n "$collisions" ]]; then
+  errors+=$'\n'"$collisions"
+  set_collision true
+else
+  set_collision false
+fi
 hash=$(sha256sum "$temp" | awk '{print toupper($1)}')
 md5=$(md5sum "$temp" | awk '{print toupper($1)}')
 

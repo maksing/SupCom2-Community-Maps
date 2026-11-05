@@ -30,6 +30,7 @@ jobs:
         run: |
           gh label create pending --repo "$GH_REPO" --color FBCA04 --description "Awaiting moderator review" --force
           gh label create invalid --repo "$GH_REPO" --color B60205 --description "Submission failed validation" --force
+          gh label create collision --repo "$GH_REPO" --color E99695 --description "Scenario path collides with another verified map" --force
 
       - name: Recheck submissions
         run: bash .github/scripts/recheck_all.sh

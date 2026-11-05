@@ -2,7 +2,7 @@ name: Validate verified map
 
 on:
   issues:
-    types: [labeled]
+    types: [labeled, unlabeled]
 
 permissions:
   contents: read
@@ -14,7 +14,12 @@ concurrency:
 
 jobs:
   validate:
-    if: github.event.label.name == 'verified'
+    # Run when verified is added, and when hidden is taken off a verified map: the map then counts for the
+    # scenario path collisions again.
+    if: >-
+      (github.event.action == 'labeled' && github.event.label.name == 'verified') ||
+      (github.event.action == 'unlabeled' && github.event.label.name == 'hidden' &&
+       contains(github.event.issue.labels.*.name, 'verified'))
     runs-on: ubuntu-latest
     steps:
       - name: Check out the validation scripts
@@ -27,6 +32,7 @@ jobs:
         run: |
           gh label create pending --repo "$GH_REPO" --color FBCA04 --description "Awaiting moderator review" --force
           gh label create invalid --repo "$GH_REPO" --color B60205 --description "Submission failed validation" --force
+          gh label create collision --repo "$GH_REPO" --color E99695 --description "Scenario path collides with another verified map" --force
 
       - name: Validate verified issue
         env:

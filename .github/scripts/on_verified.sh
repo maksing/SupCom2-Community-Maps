@@ -30,7 +30,10 @@ if [[ -z "$(python3 "$validate_script" paths)" ]]; then
 fi
 
 errors=$(scenario_collisions)
-if [[ -n "$errors" ]]; then
+if [[ -z "$errors" ]]; then
+  set_collision false
+else
+  set_collision true
   set_status invalid
   gh issue comment "$NUMBER" --repo "$GH_REPO" --body "The verified label was removed because of scenario path collisions with other verified maps:"$'\n\n'"$(bullet_list "$errors")"$'\n'"Edit the issue to fix them and it will be checked again."
   exit 0

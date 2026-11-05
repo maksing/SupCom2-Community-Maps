@@ -38,6 +38,19 @@ set_status() {
   fi
 }
 
+# set_collision true|false: the collision label says that the latest check found a scenario path that another
+# verified map uses. It is not a status: it is added next to invalid and removed when the collision is gone.
+set_collision() {
+  local labels
+  labels=$(current_labels)
+  if [[ "$1" == true ]]; then
+    has_label collision "$labels" || gh issue edit "$NUMBER" --repo "$GH_REPO" --add-label collision
+  else
+    if has_label collision "$labels"; then gh issue edit "$NUMBER" --repo "$GH_REPO" --remove-label collision; fi
+  fi
+  return 0
+}
+
 # bullet_list "<lines>": turns lines into a markdown bullet list.
 bullet_list() {
   local line out=""

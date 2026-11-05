@@ -247,7 +247,7 @@ PY
 start "$(make_body $valid_name '_No response_')" pending
 collision_issues 3 verified > "$work/others.json"
 FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd run on_submission.sh
-expect_labels "a path used by a verified map makes the submission invalid" invalid
+expect_labels "a path used by a verified map makes the submission invalid and adds collision" collision,invalid
 expect_comment "the collision names the other map" "already used by the verified map #3"
 
 start "$(make_body $valid_name '_No response_')" pending
@@ -268,7 +268,7 @@ expect_labels "a pending map with the same path is not a collision" pending
 start "$(make_body $valid_name "$good_sha")" pending verified
 collision_issues 3 verified > "$work/others.json"
 FAKE_ISSUES_FILE=$work/others.json run on_verified.sh
-expect_labels "verifying a map whose path is used by a verified map makes it invalid" invalid
+expect_labels "verifying a map whose path is used by a verified map makes it invalid and adds collision" collision,invalid
 expect_comment "verification explains the collision" "collisions"
 
 start "$(make_body $valid_name "$good_sha")" pending verified
@@ -279,12 +279,44 @@ expect_labels "verifying is fine when the other map is hidden" verified
 start "$(make_body $valid_name "$good_sha")" verified
 collision_issues 3 verified > "$work/others.json"
 FAKE_OPEN=7 FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd APPLY=true bash "$here/recheck_all.sh" >/dev/null
-expect_labels "recheck makes the newer of two colliding verified maps invalid" invalid
+expect_labels "recheck makes the newer of two colliding verified maps invalid and adds collision" collision,invalid
 
 start "$(make_body $valid_name "$good_sha")" verified
 collision_issues 9 verified > "$work/others.json"
 FAKE_OPEN=7 FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd APPLY=true bash "$here/recheck_all.sh" >/dev/null
 expect_labels "recheck keeps the older of two colliding verified maps" verified
+
+# --- the collision label ---
+start "$(make_body $valid_name "$good_sha")" verified
+collision_issues 3 verified > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json run on_verified.sh
+expect_labels "a verified map that collides when hidden is taken off loses verified and gets collision" collision,invalid
+expect_comment "the removed verified label is explained by the collision" "collisions"
+
+start "$(make_body $valid_name "$good_sha")" verified hidden
+collision_issues 3 verified > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json run on_verified.sh
+expect_labels "a hidden verified map may share a path and stays verified" hidden,verified
+
+start "$(make_body $valid_name "$good_sha")" verified hidden collision
+collision_issues 3 verified > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json run on_verified.sh
+expect_labels "hiding a colliding map removes the collision label" hidden,verified
+
+start "$(make_body $valid_name '_No response_')" pending collision
+FAKE_ARCHIVE=$work/good.scd run on_submission.sh
+expect_labels "the collision label goes away once the collision is gone" pending
+
+start "$(make_body $invalid_name '_No response_')" invalid collision
+run on_submission.sh
+expect_labels "a submission that fails earlier does not keep a stale collision label" invalid
+
+start "$(make_body $valid_name '_No response_')" pending
+collision_issues 3 verified > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd run on_submission.sh
+collision_issues 3 pending > "$work/others.json"
+FAKE_ISSUES_FILE=$work/others.json FAKE_ARCHIVE=$work/good.scd run on_submission.sh
+expect_labels "fixing the collision makes the submission pending again without collision" pending
 
 # --- the catalog branch ---
 catalog_issues() { # catalog_issues <labels of issue 2>: a promoted, a community-or-other and a hidden issue
