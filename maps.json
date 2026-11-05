@@ -59,5 +59,29 @@
     "moderationStatus": "verified",
     "sha256": "E72D7F1415E42082A7E54D2E20FD9BFD24F1274925BDD2A9B3ACD8E1E9BB57F0",
     "modHash": "2E6C343E261B48330E8D68FAAF686271"
+  },
+  {
+    "id": "_CustomMission_1p_TermesisCustomMission_v5.0.0_by_bdftm.scd",
+    "fileName": "_CustomMission_1p_TermesisCustomMission_v5.0.0_by_bdftm.scd",
+    "author": "maksing and foxtermelon",
+    "type": "Map",
+    "version": "v5.0.0",
+    "lastUpdatedDate": "05.11.2026",
+    "downloadURL": "https://github.com/Jaywix/SC2Mods/releases/download/BDFTM_Custom_Mission_v5.0.0/_CustomMission_1p_TermesisCustomMission_v5.0.0_by_bdftm.scd",
+    "playerCount": "1",
+    "mapTeamStyle": "",
+    "size": "Medium",
+    "mapName": "TermesisCustomMission",
+    "description": "",
+    "mapPictureFileName": "",
+    "mapPictureUrl": "",
+    "tags": [],
+    "scenarioFilePath": "/maps/SC2_D3_TermesisMission/SC2_D3_TermesisMission_scenario.lua",
+    "catalogSource": "official",
+    "sourceIssueNumber": 16,
+    "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/16",
+    "moderationStatus": "verified",
+    "sha256": "8A0551E53C58EA5ED5E0388EEBD9AB8BC14B9C002280825F00D93474AD3E1E6A",
+    "modHash": "3E511189A724DAEA30D3741128AF6AC8"
   }
 ]
