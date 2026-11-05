@@ -1,0 +1,26 @@
+[
+  {
+    "id": "_Map_8p_AZU-Europa-Research-Site_v1.0.0_by_blu-azur.scd",
+    "fileName": "_Map_8p_AZU-Europa-Research-Site_v1.0.0_by_blu-azur.scd",
+    "author": "blu azur",
+    "type": "Map",
+    "version": "v1.0.0",
+    "lastUpdatedDate": "04.11.2026",
+    "downloadURL": "https://github.com/maksing/SC2maps/releases/download/Europa_Research_Site/_Map_8p_AZU-Europa-Research-Site_v1.0.0_by_blu-azur.scd",
+    "playerCount": "8",
+    "mapTeamStyle": "4v4",
+    "size": "Medium",
+    "mapName": "Europa_Research_Site",
+    "description": "222222",
+    "mapPictureFileName": "",
+    "mapPictureUrl": "https://github.com/user-attachments/assets/2bea330d-012a-41f9-9aec-eeecd1e82789",
+    "tags": [],
+    "scenarioFilePath": "/maps/AZU_Europa_Research_Site_0034_v1__3v3__4v4/AZU_Europa_Research_Site_0034_v1__3v3__4v4_scenario.lua",
+    "catalogSource": "community",
+    "sourceIssueNumber": 11,
+    "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/11",
+    "moderationStatus": "verified",
+    "sha256": "05B4B6507DDB7C41CD5BE14210F78D9B4F3BB62F7C821D9A3299A9BC77305BF0",
+    "modHash": ""
+  }
+]
