@@ -30,3 +30,12 @@ Verified maps are downloaded again every week. A map whose download stops workin
 ## Rechecking all submissions
 
 After the rules or checks change, run **Actions → Recheck all submissions → Run workflow**. It runs every check again on every open map submission and lists the result per issue in the run summary. By default it is a dry run that changes nothing; tick **apply** to update labels and post comments. Verified maps that still pass stay verified, verified maps that now fail lose the label and become `invalid`, and `rejected` submissions are skipped.
+
+## Catalog for the launcher
+
+The launcher does not read the issues; it reads two JSON files that the **Update catalog** workflow keeps on the `catalog` branch:
+
+- `maps.json`: official maps, issues labeled `verified` and `promoted`
+- `community-maps.json`: community maps, issues labeled `verified` without `promoted`
+
+Maps labeled `hidden` are in neither file, and neither are maps that also have `pending`, `invalid`, `broken` or `rejected`. The files have the structure of the old `maps.json` and are rebuilt when labels or issues change, after the validation workflows finish, and every night; a commit is only made when the content changed. Each entry also has the generated `sha256` and `modHash` (MD5), which the workflow fills into the issue when the file is checked. Do not edit the branch by hand. It is served at `https://raw.githubusercontent.com/maksing/SupCom2-Community-Maps/catalog/maps.json` (and `community-maps.json`).

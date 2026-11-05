@@ -179,5 +179,60 @@ FAKE_OPEN=7 APPLY=true bash "$here/recheck_all.sh" > "$work/skip.txt"
 expect_labels "recheck leaves issues that are not submissions alone" pending
 grep -q "skipped" "$work/skip.txt" && pass "recheck reports skipped issues" || fail "recheck does not report skipped issues"
 
+# --- MD5 ---
+good_md5=$(md5sum "$work/good.scd" | awk '{print toupper($1)}')
+
+start "$(make_body $valid_name '_No response_')" pending
+FAKE_ARCHIVE=$work/good.scd run on_submission.sh
+expect_body_has "valid submission gets its MD5" "### MD5 (generated automatically)"
+expect_body_has "valid submission gets the MD5 value" "$good_md5"
+
+start "$(make_body $valid_name "$good_sha")" verified
+FAKE_OPEN=7 FAKE_ARCHIVE=$work/good.scd APPLY=true bash "$here/recheck_all.sh" >/dev/null
+expect_labels "recheck of a verified map without MD5 keeps it verified" verified
+expect_body_has "recheck adds the missing MD5" "$good_md5"
+expect_body_has "recheck keeps the SHA-256" "$good_sha"
+
+start "$(make_body $valid_name "$good_sha")" verified
+FAKE_OPEN=7 FAKE_ARCHIVE=$work/other.scd APPLY=true bash "$here/recheck_all.sh" >/dev/null
+expect_labels "recheck of a verified map whose file changed makes it invalid" invalid
+expect_comment "recheck explains the changed file" "changed after the map was verified"
+expect_body_has "recheck does not overwrite the verified SHA-256" "$good_sha"
+
+# --- the catalog branch ---
+catalog_issues() { # catalog_issues <labels of issue 2>: a promoted, a community-or-other and a hidden issue
+  python3 - "$(make_body $valid_name "$good_sha")" "$1" <<'PY'
+import json, sys
+body, labels = sys.argv[1], sys.argv[2].split(",")
+def issue(number, names):
+    return {"number": number, "url": f"https://example.com/{number}", "body": body, "labels": [{"name": n} for n in names]}
+print(json.dumps([issue(1, ["verified", "promoted"]), issue(2, labels), issue(3, ["verified", "hidden"])]))
+PY
+}
+catalog_counts() { # prints "<official> <community>" from the catalog branch
+  git -C "$work/remote.git" show catalog:maps.json | python3 -c "import json,sys; print(len(json.load(sys.stdin)), end=' ')"
+  git -C "$work/remote.git" show catalog:community-maps.json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))"
+}
+publish() { GH_BIN="bash '$here/fakes/gh'" CATALOG_REMOTE="$work/remote.git" FAKE_ISSUES_FILE="$work/issues.json" bash "$here/publish_catalog.sh" 2>&1; }
+commits() { git -C "$work/remote.git" rev-list --count catalog; }
+
+git init --quiet --bare "$work/remote.git"
+catalog_issues verified > "$work/issues.json"
+publish > /dev/null
+[[ "$(catalog_counts)" == "1 1" ]] && pass "catalog branch is created with official and community maps" || fail "catalog counts are '$(catalog_counts)', expected '1 1'"
+[[ "$(commits)" == 1 ]] && pass "first catalog build is one commit" || fail "catalog has $(commits) commits, expected 1"
+git -C "$work/remote.git" show catalog:README.md | grep -q "generated automatically" && pass "catalog branch explains itself" || fail "catalog README missing"
+
+publish | grep -q unchanged && pass "unchanged catalog is reported" || fail "unchanged catalog is not reported"
+[[ "$(commits)" == 1 ]] && pass "unchanged catalog makes no new commit" || fail "catalog has $(commits) commits, expected 1"
+
+catalog_issues verified,promoted > "$work/issues.json"
+publish > /dev/null
+[[ "$(catalog_counts)" == "2 0" && "$(commits)" == 2 ]] && pass "promoting a map moves it to the official file in one new commit" || fail "after promoting: '$(catalog_counts)', $(commits) commits"
+
+catalog_issues verified,invalid > "$work/issues.json"
+publish > /dev/null
+[[ "$(catalog_counts)" == "1 0" ]] && pass "an invalid map disappears from the catalog" || fail "after invalid: '$(catalog_counts)'"
+
 echo
 if (( failures == 0 )); then echo "all passed"; else echo "$failures failed"; exit 1; fi

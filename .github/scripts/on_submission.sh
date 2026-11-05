@@ -41,6 +41,13 @@ fi
 
 errors=$(python3 "$validate_script" archive "$temp")
 hash=$(sha256sum "$temp" | awk '{print toupper($1)}')
+md5=$(md5sum "$temp" | awk '{print toupper($1)}')
+
+# A verified map must not change silently: the weekly check and the recheck report a changed file.
+existing_sha=$(python3 "$validate_script" sha | tr 'a-f' 'A-F')
+if [[ "${MODE:-normal}" == recheck && "$was_verified" == true && -n "$existing_sha" && "$existing_sha" != "$hash" ]]; then
+  errors+=$'\n'"The file changed after the map was verified (SHA-256 was $existing_sha, now $hash)."
+fi
 
 duplicates=$(open_issues_mentioning "$url")
 [[ -n "$duplicates" ]] && errors+=$'\n'"The same download URL is already used by $duplicates."
@@ -54,17 +61,23 @@ if [[ -n "$errors" ]]; then
 fi
 
 echo "RESULT=valid"
+
+# A verified map that is rechecked keeps its status and its SHA-256; every other valid submission goes
+# (back) to the moderation queue with the hashes of the current file.
+keep_sha=""
 if [[ "${MODE:-normal}" == recheck && "$was_verified" == true ]]; then
-  exit 0
+  keep_sha="--keep-sha"
+else
+  set_status pending
 fi
 
-# Everything passed: back to the moderation queue, with the SHA-256 of the current file.
-set_status pending
-if [[ "$(python3 "$validate_script" sha | tr 'a-f' 'A-F')" != "$hash" ]]; then
-  gh issue view "$NUMBER" --repo "$GH_REPO" --json body --jq .body > "$body_file"
-  HASH="$hash" perl -0pi -e 's/(### SHA-256 \(generated automatically\)\s*)(?:_No response_|[^\s]+)?/$1.$ENV{HASH}/e' "$body_file"
+existing_md5=$(python3 "$validate_script" md5 | tr 'a-f' 'A-F')
+if [[ -z "$existing_sha" || "$existing_md5" != "$md5" || ( -z "$keep_sha" && "$existing_sha" != "$hash" ) ]]; then
+  BODY=$(gh issue view "$NUMBER" --repo "$GH_REPO" --json body --jq .body) \
+    python3 "$validate_script" hashes "$hash" "$md5" $keep_sha > "$body_file"
   gh issue edit "$NUMBER" --repo "$GH_REPO" --body-file "$body_file"
 fi
+
 if [[ "$was_verified" == true && "${MODE:-normal}" != recheck ]]; then
   gh issue comment "$NUMBER" --repo "$GH_REPO" --body "This submission changed after verification and requires review again."
 fi

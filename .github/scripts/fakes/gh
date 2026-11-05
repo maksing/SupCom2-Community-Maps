@@ -17,8 +17,11 @@ case "$cmd" in
     while [[ $# -gt 0 ]]; do
       if [[ "$1" == --body ]]; then printf '%s\n---\n' "$2" >> "$FAKE_DIR/comments.txt"; shift 2; else shift; fi
     done ;;
+  "api "*|"api")
+    echo "${FAKE_VERIFIED_AT:-2026-11-04T16:44:09Z}" ;;
   "issue list")
-    if [[ "$*" == *--search* ]]; then echo "${FAKE_DUPLICATES:-}"
+    if [[ "$*" == *number,body,labels,url* ]]; then cat "$FAKE_ISSUES_FILE"
+    elif [[ "$*" == *--search* ]]; then echo "${FAKE_DUPLICATES:-}"
     elif [[ "$*" == *--label* ]]; then echo "${FAKE_VERIFIED:-}"
     else echo "${FAKE_OPEN:-}"; fi ;;
   *) ;;

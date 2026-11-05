@@ -6,6 +6,10 @@ Usage (the issue body is read from the BODY environment variable):
     validate_submission.py archive FILE    print the problems found in the downloaded file, one per line
     validate_submission.py url             print the download URL
     validate_submission.py sha             print the generated SHA-256, if any
+    validate_submission.py md5             print the generated MD5, if any
+    validate_submission.py hashes SHA MD5 [--keep-sha]
+                                           print the issue body with the generated SHA-256 and MD5 filled in;
+                                           --keep-sha leaves an existing SHA-256 untouched
 
 The commands that check things exit with 0 and an empty output when everything is fine.
 Output lines are meant to be posted as an issue comment, so they are written for the map author.
@@ -200,9 +204,59 @@ def check_archive(body, path):
     return errors
 
 
+SHA_HEADING = "SHA-256 (generated automatically)"
+MD5_HEADING = "MD5 (generated automatically)"
+
+
+def set_section(body, heading, text, after=None):
+    """Body with the value of a '### heading' section replaced, or the section added when it is missing.
+
+    A missing section goes right after the `after` section, or at the end of the body.
+    """
+    newline = "\r\n" if "\r\n" in body else "\n"
+    lines = body.replace("\r\n", "\n").split("\n")
+
+    def bounds(name):
+        for start, line in enumerate(lines):
+            if line == f"### {name}":
+                end = start + 1
+                while end < len(lines) and not lines[end].startswith("### "):
+                    end += 1
+                return start, end
+        return None
+
+    found = bounds(heading)
+    if found:
+        start, end = found
+        lines[start + 1:end] = ["", text, ""] if end < len(lines) else ["", text]
+    else:
+        anchor = bounds(after) if after else None
+        position = anchor[1] if anchor else len(lines)
+        if position < len(lines):
+            lines[position:position] = [f"### {heading}", "", text, ""]
+        else:
+            while lines and lines[-1] == "":
+                lines.pop()
+            lines.extend(["", f"### {heading}", "", text])
+    return newline.join(lines)
+
+
+def with_hashes(body, sha256, md5, keep_sha=False):
+    """Body with the generated SHA-256 and MD5 filled in."""
+    if not (keep_sha and value(body, SHA_HEADING)):
+        body = set_section(body, SHA_HEADING, sha256)
+    return set_section(body, MD5_HEADING, md5, after=SHA_HEADING)
+
+
 def main():
     command = sys.argv[1] if len(sys.argv) > 1 else ""
     body = os.environ.get("BODY", "")
+    if command == "hashes" and len(sys.argv) > 3:
+        sys.stdout.write(with_hashes(body, sys.argv[2], sys.argv[3], "--keep-sha" in sys.argv[4:]))
+        return
+    if command == "md5":
+        print(value(body, MD5_HEADING).replace(" ", ""))
+        return
     if command == "fields":
         errors = check_fields(body)
     elif command == "archive" and len(sys.argv) > 2:

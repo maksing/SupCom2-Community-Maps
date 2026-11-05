@@ -1,0 +1,38 @@
+name: Update catalog
+
+# Keeps maps.json (official maps) and community-maps.json (community maps) on the catalog branch in step with
+# the verified issues. The launcher reads these files instead of calling the GitHub API.
+on:
+  issues:
+    types: [labeled, unlabeled, edited, closed, reopened, deleted]
+  workflow_run:
+    # The label changes made by the validation workflows do not trigger workflows themselves, so rebuild
+    # when those workflows finish.
+    workflows: ["Validate map submission", "Validate verified map", "Check verified maps", "Recheck all submissions"]
+    types: [completed]
+  schedule:
+    - cron: "43 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: catalog
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the scripts
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Update the catalog branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: bash .github/scripts/publish_catalog.sh

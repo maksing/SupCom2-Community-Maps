@@ -21,7 +21,7 @@ jobs:
 
       - name: Unit tests for the submission checks
         working-directory: .github/scripts
-        run: python3 -m unittest test_validate_submission
+        run: python3 -m unittest discover -p "test_*.py"
 
       - name: Label and comment behavior of the workflow scripts
         run: bash .github/scripts/test_workflows.sh

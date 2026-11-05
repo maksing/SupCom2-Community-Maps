@@ -128,6 +128,11 @@ body:
     attributes:
       label: SHA-256 (generated automatically)
       description: Leave this field unchanged. The repository workflow fills it after submission.
+  - type: input
+    id: md5
+    attributes:
+      label: MD5 (generated automatically)
+      description: Leave this field unchanged. The repository workflow fills it after submission.
   - type: checkboxes
     id: agreement
     attributes:

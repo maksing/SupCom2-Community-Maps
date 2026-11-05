@@ -78,6 +78,48 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(v.check_fields(body().replace("\n", "\r\n")), [])
 
 
+class HashTests(unittest.TestCase):
+    SHA = "A" * 64
+    MD5 = "B" * 32
+
+    def test_fills_empty_sha_and_adds_missing_md5_after_it(self):
+        text = body().replace("### Publication agreement", "### SHA-256 (generated automatically)\n\n_No response_\n\n### Publication agreement")
+        result = v.with_hashes(text, self.SHA, self.MD5)
+        self.assertEqual(v.value(result, v.SHA_HEADING), self.SHA)
+        self.assertEqual(v.value(result, v.MD5_HEADING), self.MD5)
+        self.assertLess(result.index(v.SHA_HEADING), result.index(v.MD5_HEADING))
+        self.assertLess(result.index(v.MD5_HEADING), result.index("### Publication agreement"))
+        self.assertEqual(v.value(result, "Publication agreement"), v.value(text, "Publication agreement"))
+
+    def test_replaces_existing_values(self):
+        text = body(**{"SHA-256 (generated automatically)": "C" * 64, "MD5 (generated automatically)": "D" * 32})
+        result = v.with_hashes(text, self.SHA, self.MD5)
+        self.assertEqual(v.value(result, v.SHA_HEADING), self.SHA)
+        self.assertEqual(v.value(result, v.MD5_HEADING), self.MD5)
+        self.assertEqual(result.count("### MD5"), 1)
+
+    def test_keep_sha_leaves_an_existing_sha_but_fills_a_missing_one(self):
+        text = body(**{"SHA-256 (generated automatically)": "C" * 64})
+        self.assertEqual(v.value(v.with_hashes(text, self.SHA, self.MD5, keep_sha=True), v.SHA_HEADING), "C" * 64)
+        empty = body(**{"SHA-256 (generated automatically)": "_No response_"})
+        self.assertEqual(v.value(v.with_hashes(empty, self.SHA, self.MD5, keep_sha=True), v.SHA_HEADING), self.SHA)
+
+    def test_section_at_the_end_and_missing_sha_section(self):
+        text = "### Map name\n\nX\n\n### SHA-256 (generated automatically)\n\n_No response_"
+        result = v.with_hashes(text, self.SHA, self.MD5)
+        self.assertEqual(v.value(result, v.SHA_HEADING), self.SHA)
+        self.assertEqual(v.value(result, v.MD5_HEADING), self.MD5)
+        no_sha = v.with_hashes("### Map name\n\nX", self.SHA, self.MD5)
+        self.assertEqual(v.value(no_sha, v.SHA_HEADING), self.SHA)
+        self.assertEqual(v.value(no_sha, v.MD5_HEADING), self.MD5)
+
+    def test_keeps_windows_line_endings(self):
+        text = body().replace("\n", "\r\n")
+        result = v.with_hashes(text, self.SHA, self.MD5)
+        self.assertNotIn("\n\n", result.replace("\r\n", ""))
+        self.assertEqual(v.value(result, v.MD5_HEADING), self.MD5)
+
+
 class ArchiveTests(unittest.TestCase):
     def make_zip(self, entries):
         handle = tempfile.NamedTemporaryFile(suffix=".scd", delete=False)
