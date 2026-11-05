@@ -1,33 +1,5 @@
 [
   {
-    "id": "_Map_6p_Forest_v1.0.0_by_bdftm.scd",
-    "fileName": "_Map_6p_Forest_v1.0.0_by_bdftm.scd",
-    "author": "foxtermelon",
-    "type": "Map",
-    "version": "v1.0.0",
-    "lastUpdatedDate": "05.11.2026",
-    "downloadURL": "https://github.com/Jaywix/SC2Mods/releases/download/Forest_v1.0.0/_Map_6p_Forest_v1.0.0_by_bdftm.scd",
-    "playerCount": "6",
-    "mapTeamStyle": "3v3",
-    "size": "Medium",
-    "mapName": "Forest",
-    "description": "Test Description 22232",
-    "mapPictureFileName": "",
-    "mapPictureUrl": "https://github.com/user-attachments/assets/06602651-6702-46d4-b2ed-b352511b3ba1",
-    "tags": [
-      "6 Players",
-      "Team",
-      "Medium"
-    ],
-    "scenarioFilePath": "/maps/BDFTM_Forest/BDFTM_Forest_scenario.lua",
-    "catalogSource": "official",
-    "sourceIssueNumber": 10,
-    "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/10",
-    "moderationStatus": "verified",
-    "sha256": "ADA6FCCFBC455B398FC9786F5930FD3EB467B712684B7D97E9824204110B0046",
-    "modHash": "EA23720A9C911060C95B1C2C6E3E10D3"
-  },
-  {
     "id": "_MapPack_Autumn2026-Part-2_v2.0.0_by_BDFTM.scd",
     "fileName": "_MapPack_Autumn2026-Part-2_v2.0.0_by_BDFTM.scd",
     "author": "crya, foxtermelon and maksing",
