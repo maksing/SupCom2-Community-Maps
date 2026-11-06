@@ -83,5 +83,33 @@
     "moderationStatus": "verified",
     "sha256": "8A0551E53C58EA5ED5E0388EEBD9AB8BC14B9C002280825F00D93474AD3E1E6A",
     "modHash": "3E511189A724DAEA30D3741128AF6AC8"
+  },
+  {
+    "id": "_Map_8p_DesertValley_v1.0.0_by_bdftm.scd",
+    "fileName": "_Map_8p_DesertValley_v1.0.0_by_bdftm.scd",
+    "author": "crya and alphahex",
+    "type": "Map",
+    "version": "v1.0.0",
+    "lastUpdatedDate": "06.11.2026",
+    "downloadURL": "https://github.com/Jaywix/SC2Mods/releases/download/BDFTM_Desert_Valley_v1.0.0/_Map_8p_DesertValley_v1.0.0_by_bdftm.scd",
+    "playerCount": "8",
+    "mapTeamStyle": "4v4",
+    "size": "Medium",
+    "mapName": "Desert_Valley",
+    "description": "",
+    "mapPictureFileName": "",
+    "mapPictureUrl": "https://github.com/user-attachments/assets/aa347193-5369-49da-99c7-4727a4efe860",
+    "tags": [
+      "8 Players",
+      "Medium",
+      "Team"
+    ],
+    "scenarioFilePath": "/maps/SC2_D3_Desert_valley/SC2_D3_Desert_valley_scenario.lua",
+    "catalogSource": "official",
+    "sourceIssueNumber": 17,
+    "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/17",
+    "moderationStatus": "verified",
+    "sha256": "C6BEDAD9D16DFD722C6DBCAC8D1D07825DF366DE9E541F19E48B806C9BDAE441",
+    "modHash": "85A2F9F50D042BA039443D18D07566F7"
   }
 ]
