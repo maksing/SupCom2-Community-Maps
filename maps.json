@@ -140,5 +140,34 @@
     "moderationStatus": "verified",
     "sha256": "CF1C5F7057C6E1D9D6FE3C596D39DD2CCC069B1AE448015057A7735FEE460A6F",
     "modHash": "99231BDC6A478C1FDCD3CC68013139DA"
+  },
+  {
+    "id": "_Map_6p_AstroCrater_v2.0.0_by_bdftm.scd",
+    "fileName": "_Map_6p_AstroCrater_v2.0.0_by_bdftm.scd",
+    "author": "foxtermelon and maksing",
+    "type": "Map",
+    "version": "v2.0.0",
+    "lastUpdatedDate": "06.11.2026",
+    "downloadURL": "https://github.com/Jaywix/SC2Mods/releases/download/BDFTM_Astro_Crater_v2.0.0/_Map_6p_AstroCrater_v2.0.0_by_bdftm.scd",
+    "playerCount": "6",
+    "mapTeamStyle": "3v3",
+    "size": "Large",
+    "mapName": "Astro Crater",
+    "description": "",
+    "mapPictureFileName": "",
+    "mapPictureUrl": "",
+    "tags": [
+      "6 Players",
+      "Team",
+      "Large",
+      "Water"
+    ],
+    "scenarioFilePath": "/maps/SC2_D3_Astro2/SC2_D3_Astro2_scenario.lua",
+    "catalogSource": "official",
+    "sourceIssueNumber": 20,
+    "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/20",
+    "moderationStatus": "verified",
+    "sha256": "A8D6F68450029A3D89AEBCDD643DB4E20BAF3DFB226E034CE0B13C60E1612567",
+    "modHash": "4854D8A1C17B9066CB16F6ACD960EF8B"
   }
 ]
