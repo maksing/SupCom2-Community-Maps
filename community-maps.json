@@ -46,5 +46,33 @@
     "moderationStatus": "verified",
     "sha256": "C89C9CF6EACF88163CF14C88770D2154E4902AAB82DF25B061B36F82E550483F",
     "modHash": "3738DEE94FE0EA4A17671DBBA01E95B7"
+  },
+  {
+    "id": "_MapPack_4v4TourneyDomeMaps_v1.0.0_by_kael.scd",
+    "fileName": "_MapPack_4v4TourneyDomeMaps_v1.0.0_by_kael.scd",
+    "author": "Kael",
+    "type": "Map",
+    "version": "v1.0.0",
+    "lastUpdatedDate": "06.11.2026",
+    "downloadURL": "https://github.com/Jaywix/SC2Mods/releases/download/4v4_Tourney_Dome_Maps_v1.0.0/_MapPack_4v4TourneyDomeMaps_v1.0.0_by_kael.scd",
+    "playerCount": "8",
+    "mapTeamStyle": "4v4",
+    "size": "",
+    "mapName": "4v4TourneyDomeMaps",
+    "description": "",
+    "mapPictureFileName": "",
+    "mapPictureUrl": "",
+    "tags": [
+      "8 Players",
+      "Team",
+      "Map Pack"
+    ],
+    "scenarioFilePath": "/maps/SC2_D1_002M004/SC2_D1_002M004_scenario.lua\n/maps/SC2_D1_002M202/SC2_D1_002M202_scenario.lua\n/maps/SC2_D1_002MD001/SC2_D1_002MD001_scenario.lua\n/maps/SC2_D1_002MD102/SC2_D1_002MD102_scenario.lua\n/maps/SC2_D1_002MU01/SC2_D1_002MU01_scenario.lua",
+    "catalogSource": "community",
+    "sourceIssueNumber": 18,
+    "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/18",
+    "moderationStatus": "verified",
+    "sha256": "A8C081CA8BD1FF33397B465A052BC15394A6CAD294A2DDB6CB31C21AFAE39BA8",
+    "modHash": "197FFED5C7ED52B3A4461E6A8033BE56"
   }
 ]
