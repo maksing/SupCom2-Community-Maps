@@ -22,5 +22,29 @@
     "moderationStatus": "verified",
     "sha256": "05B4B6507DDB7C41CD5BE14210F78D9B4F3BB62F7C821D9A3299A9BC77305BF0",
     "modHash": "FE73DEC08F82FCA74DC5A1107F525711"
+  },
+  {
+    "id": "_MapPack_SCSMapPack_v1.0.0_by_scs.scd",
+    "fileName": "_MapPack_SCSMapPack_v1.0.0_by_scs.scd",
+    "author": "Nite and maksing",
+    "type": "Map",
+    "version": "v1.0.0",
+    "lastUpdatedDate": "06.11.2026",
+    "downloadURL": "https://github.com/Jaywix/SC2Mods/releases/download/SCS_Map_Pack_v1.0.0/_MapPack_SCSMapPack_v1.0.0_by_scs.scd",
+    "playerCount": "",
+    "mapTeamStyle": "",
+    "size": "",
+    "mapName": "SCSMapPack",
+    "description": "",
+    "mapPictureFileName": "",
+    "mapPictureUrl": "",
+    "tags": [],
+    "scenarioFilePath": "/maps/SC2_A1_009SCS/SC2_A1_009SCS_scenario.lua\n/maps/SC2_D1_003BA/SC2_D1_003BA_scenario.lua\n/maps/SC2_D1_102SCS/SC2_D1_102SCS_scenario.lua\n/maps/SC2_D1_102SCSa/SC2_D1_102SCSa_scenario.lua\n/maps/SC2_D1_301a/SC2_D1_301a_scenario.lua\n/maps/SC2_D3_Mesa3v3/SC2_D3_Mesa3v3_scenario.lua\n/maps/SC2_D3_Mesa3v3a/SC2_D3_Mesa3v3a_scenario.lua\n/maps/SC2_D3_Ship2v2/SC2_D3_Ship2v2_scenario.lua\n/maps/SC2_MP_004SCS/SC2_MP_004SCS_scenario.lua\n/maps/SC2_MP_007a/SC2_MP_007a_scenario.lua\n/maps/SC2_MP_301TM2/SC2_MP_301TM2_scenario.lua\n/maps/SC2_MP_406/SC2_MP_406_scenario.lua\n/maps/SC2_MP_406a/SC2_MP_406a_scenario.lua\n/maps/SC2_MP_407/SC2_MP_407_scenario.lua\n/maps/SC2_MP_408/SC2_MP_408_scenario.lua",
+    "catalogSource": "community",
+    "sourceIssueNumber": 13,
+    "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/13",
+    "moderationStatus": "verified",
+    "sha256": "C89C9CF6EACF88163CF14C88770D2154E4902AAB82DF25B061B36F82E550483F",
+    "modHash": "3738DEE94FE0EA4A17671DBBA01E95B7"
   }
 ]
