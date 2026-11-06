@@ -111,5 +111,34 @@
     "moderationStatus": "verified",
     "sha256": "C6BEDAD9D16DFD722C6DBCAC8D1D07825DF366DE9E541F19E48B806C9BDAE441",
     "modHash": "85A2F9F50D042BA039443D18D07566F7"
+  },
+  {
+    "id": "_Map_8p_Ammonia_v1.0.0_by_bdftm.scd",
+    "fileName": "_Map_8p_Ammonia_v1.0.0_by_bdftm.scd",
+    "author": "crya and alphahex",
+    "type": "Map",
+    "version": "v1.0.0",
+    "lastUpdatedDate": "06.11.2026",
+    "downloadURL": "https://github.com/Jaywix/SC2Mods/releases/download/BDFTM_Ammonia_v1.0.0/_Map_8p_Ammonia_v1.0.0_by_bdftm.scd",
+    "playerCount": "8",
+    "mapTeamStyle": "4v4",
+    "size": "Medium",
+    "mapName": "Ammonia",
+    "description": "",
+    "mapPictureFileName": "",
+    "mapPictureUrl": "",
+    "tags": [
+      "8 Players",
+      "Team",
+      "Medium",
+      "Water"
+    ],
+    "scenarioFilePath": "/maps/SC2_D3_Ammonia/SC2_D3_Ammonia_scenario.lua",
+    "catalogSource": "official",
+    "sourceIssueNumber": 19,
+    "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/19",
+    "moderationStatus": "verified",
+    "sha256": "CF1C5F7057C6E1D9D6FE3C596D39DD2CCC069B1AE448015057A7735FEE460A6F",
+    "modHash": "99231BDC6A478C1FDCD3CC68013139DA"
   }
 ]
