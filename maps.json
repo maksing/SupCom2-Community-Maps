@@ -1,38 +1,5 @@
 [
   {
-    "id": "_MapPack_Autumn2026-Part-2_v2.0.0_by_BDFTM.scd",
-    "fileName": "_MapPack_Autumn2026-Part-2_v2.0.0_by_BDFTM.scd",
-    "author": "crya, foxtermelon and maksing",
-    "type": "Map",
-    "version": "v2.0.0",
-    "lastUpdatedDate": "05.11.2026",
-    "downloadURL": "https://github.com/Jaywix/SC2Mods/releases/download/Autumn-Part-2_v2.0.0/_MapPack_Autumn2026-Part-2_v2.0.0_by_BDFTM.scd",
-    "playerCount": "",
-    "mapTeamStyle": "",
-    "size": "",
-    "mapName": "Autumn-Part-2_v2.0.0",
-    "description": "",
-    "mapPictureFileName": "",
-    "mapPictureUrl": "",
-    "tags": [
-      "Map Pack",
-      "Small",
-      "Medium",
-      "Large",
-      "Water",
-      "8 Players",
-      "Team",
-      "4 Players"
-    ],
-    "scenarioFilePath": "/maps/BDFTM_Alpha_Factory_V2/BDFTM_Alpha_Factory_V2_scenario.lua\n/maps/BDFTM_ArchipelagoV2/BDFTM_ArchipelagoV2_scenario.lua\n/maps/BDFTM_Black_Cliffs/BDFTM_Black_Cliffs_scenario.lua\n/maps/BDFTM_Canis/BDFTM_Canis_scenario.lua\n/maps/BDFTM_Charon_V2/BDFTM_Charon_V2_scenario.lua\n/maps/BDFTM_Commanders_Rift/BDFTM_Commanders_Rift_scenario.lua\n/maps/BDFTM_Crimson_Peaks/BDFTM_Crimson_Peaks_scenario.lua\n/maps/BDFTM_Dichotomy_V2/BDFTM_Dichotomy_V2_scenario.lua\n/maps/BDFTM_Frostpit/BDFTM_Frostpit_scenario.lua\n/maps/BDFTM_Golden_Waste/BDFTM_Golden_Waste_scenario.lua\n/maps/BDFTM_Lost_Valley/BDFTM_Lost_Valley_scenario.lua\n/maps/BDFTM_Mirage/BDFTM_Mirage_scenario.lua\n/maps/BDFTM_Pearl/BDFTM_Pearl_scenario.lua\n/maps/BDFTM_Sandbox/BDFTM_Sandbox_scenario.lua\n/maps/BDFTM_Sunset/BDFTM_Sunset_scenario.lua\n/maps/BDFTM_Taiga/BDFTM_Taiga_scenario.lua",
-    "catalogSource": "official",
-    "sourceIssueNumber": 12,
-    "sourceIssueUrl": "https://github.com/maksing/SupCom2-Community-Maps/issues/12",
-    "moderationStatus": "verified",
-    "sha256": "E72D7F1415E42082A7E54D2E20FD9BFD24F1274925BDD2A9B3ACD8E1E9BB57F0",
-    "modHash": "2E6C343E261B48330E8D68FAAF686271"
-  },
-  {
     "id": "_CustomMission_1p_TermesisCustomMission_v5.0.0_by_bdftm.scd",
     "fileName": "_CustomMission_1p_TermesisCustomMission_v5.0.0_by_bdftm.scd",
     "author": "maksing and foxtermelon",
